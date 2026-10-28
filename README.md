@@ -1,6 +1,6 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 5: backend execution traces and authenticated human approval for local simulated incidents are implemented. See `docs/PART5_COMPLETION.md` for verification and `docs/PART5.md` for operator setup.**
+Independent migration of a cold-chain logistics assistant. **Part 6: versioned evaluations now cover 30 control, agent, and retrieval cases. See `docs/PART6_COMPLETION.md` for measured results and limits, and `docs/PART6.md` for commands.**
 
 The agent uses Claude Agent SDK with an in-process MCP server exposing three evidence tools for telemetry, weather, and SOP retrieval, plus a fourth tool that stores a simulated escalation proposal for human review. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
@@ -105,10 +105,19 @@ Local embedding weights must be prepared before starting the agent. If not alrea
 
 ## Remaining phases and limitations
 
-Part 5 approval is local and simulated. Set a separate operator password with `python -m scripts.configure_operator`, then restart the app. Proposals remain disabled until configured. See `docs/PART5.md`. Part 6 adds agent evaluations; Part 7 deploys the website. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
+Part 5 approval is local and simulated. Set a separate operator password with `python -m scripts.configure_operator`, then restart the app. Proposals remain disabled until configured. See `docs/PART5.md`. Part 6 adds repeatable evaluations; Part 7 deployment is not started. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
 
-Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system, public deployment, or measured answer-quality score is claimed.
+Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system or public deployment is claimed. The small evaluation baseline measures specific checks, not general accuracy or human-reviewed faithfulness.
 
-See `MIGRATION_CHECKLIST.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+See `MIGRATION_CHECKLIST.md`, `docs/PART6.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
 
 To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.
+
+## Evaluations
+
+```bash
+.venv/bin/python -m scripts.evaluate                       # 14 offline controls; 16 live cases skipped
+.venv/bin/python -m scripts.evaluate --live-agent --live-retrieval --live-sql
+```
+
+Live agent mode makes 12 paid Claude requests with fixed synthetic/SOP evidence, fresh sessions, and $0.15 SDK budgets per case by default. Retrieval mode reads the existing authorized Pinecone index. SQL mode runs native checks against the isolated SQL instance. Outputs go to new timestamped directories and preserve case failures, answers, tool evidence, latency/cost, and version hashes. See `docs/PART6.md` before interpreting scores. The final baseline passes 30 defined cases after a documented scorer correction; human review remains pending and a qualitative grounding concern is recorded.

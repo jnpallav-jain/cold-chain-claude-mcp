@@ -87,21 +87,21 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 6. Build repeatable evaluations
 
-- [ ] Create approximately 20–30 versioned cases with questions, expected behavior, and scoring criteria.
-- [ ] Use fixed telemetry fixtures and controlled weather responses for reproducible checks.
-- [ ] Check tool selection and argument validity.
-- [ ] Check SQL results against expected fixture results.
-- [ ] Check SOP retrieval against relevant clauses or reference evidence.
-- [ ] Assess answer faithfulness against SOP, telemetry, and weather evidence as appropriate.
-- [ ] Test missing evidence, empty results, tool failures, and unsupported questions.
-- [ ] Test forbidden SQL, malicious retrieved instructions, and attempts to bypass approval.
-- [ ] Test turn limits, query cancellation, session isolation, and request budgets.
-- [ ] Use deterministic assertions where possible; human-review model-judged samples.
-- [ ] Generate a report with case-level results, failures, latency, and cost where measurable.
-- [ ] Record model, prompt, dependency, and dataset versions with each evaluation run.
-- [ ] Set release criteria after establishing a baseline; publish measured results rather than invented accuracy claims.
+- [x] Create approximately 20–30 versioned cases with questions, expected behavior, and scoring criteria.
+- [x] Use fixed telemetry fixtures and controlled weather responses for reproducible checks.
+- [x] Check tool selection and argument validity.
+- [x] Check SQL results against expected fixture results.
+- [x] Check SOP retrieval against relevant clauses or reference evidence.
+- [x] Assess answer faithfulness against SOP, telemetry, and weather evidence as appropriate.
+- [x] Test missing evidence, empty results, tool failures, and unsupported questions.
+- [x] Test forbidden SQL, malicious retrieved instructions, and attempts to bypass approval.
+- [x] Test turn limits, query cancellation, session isolation, and request budgets.
+- [x] Use deterministic assertions where possible; human-review any model-judged samples before publishing them. (No LLM judge used; an actual human review template remains pending.)
+- [x] Generate a report with case-level results, failures, latency, and cost where measurable.
+- [x] Record model, prompt, dependency, and dataset versions with each evaluation run.
+- [x] Set release criteria after establishing a baseline; publish measured results rather than invented accuracy claims.
 
-**Completion:** A documented command produces a reproducible evaluation report and exposes regressions.
+**Completion:** A documented harness produced 30 case-level results plus a native SQL supplement. Final deterministic scoring passes 14 controls, 12 live fixed-evidence agent cases, and four real retrieval cases; 79 automated tests pass. Preserved the initial scorer failure and correction. Human review remains pending; no general faithfulness score is claimed. See `docs/PART6_COMPLETION.md`. Part 7 awaits user confirmation.
 
 ## 7. Build and deploy the website demo
 
@@ -138,7 +138,7 @@ Suggested resume wording after completion:
 
 - [x] **Milestone A:** Independent project copy and isolated resources.
 - [x] **Milestone B:** Local Claude Agent SDK + MCP workflow.
-- [ ] **Milestone C:** Verified permissions, approval workflow, and evaluation report.
+- [x] **Milestone C:** Verified permissions, approval workflow, and evaluation report. Human review remains required before broad quality claims/publication.
 - [ ] **Milestone D:** Deployed demo and portfolio materials.
 
 Start with one agent and three business tools. Defer multi-agent delegation, database migration, sparse/hybrid retrieval, reranking, and a remotely hosted MCP endpoint until a measured need justifies them.
