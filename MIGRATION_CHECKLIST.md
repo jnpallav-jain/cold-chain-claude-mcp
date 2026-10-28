@@ -105,20 +105,20 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 7. Build and deploy the website demo
 
-- [ ] Adapt the existing Streamlit UI to the new application interface.
-- [ ] Add sample questions, citations, execution traces, reset controls, and approval controls.
-- [ ] Label fleet records as historical and weather readings with their observation time.
-- [ ] Avoid implying that current weather explains historical shipment events.
+- [x] Adapt the existing Streamlit UI to the new application interface.
+- [x] Add sample questions, citations, execution traces, reset controls, and approval controls.
+- [x] Label fleet records as historical and weather readings with their observation time.
+- [x] Avoid implying that current weather explains historical shipment events.
 - [ ] Choose hosting that supports the SDK runtime, database connectivity, and local embedding resource needs.
-- [ ] Package and verify the deployment environment and dependency installation.
-- [ ] Keep API keys and database credentials server-side.
-- [ ] Add demo access controls, session isolation, concurrency limits, rate limits, and spending caps.
-- [ ] Keep the database and administrative audit viewer off public unauthenticated access paths.
-- [ ] Add health checks, visible failure states, and an operational shutdown procedure.
-- [ ] Verify the deployed workflow from a fresh browser session.
+- [x] Package and verify the deployment environment and dependency installation.
+- [x] Keep API keys and database credentials server-side.
+- [x] Add demo access controls, session isolation, concurrency/rate limits, and conservative daily admission reservations plus SDK request budgets. Provider-enforced billing limits remain a deployment prerequisite.
+- [x] Keep the database and administrative audit viewer off public unauthenticated access paths.
+- [x] Add health checks, visible failure states, and an operational shutdown procedure.
+- [x] Verify the local website workflow from a fresh browser session. External AWS deployment verification remains pending.
 - [ ] Publish the working demo URL after deployment checks pass.
 
-**Completion:** A reviewer can complete a bounded sample workflow and inspect the evidence supporting its answer.
+**Status:** Local implementation verified with 92 automated tests, a fresh 30-case evaluation, Linux container readiness, and an actual local-browser workflow. AWS selected; deployment preflight is blocked by an explicit Organizations SCP deny. No cloud resource or public URL created. See `docs/PART7_STATUS.md`; Part 7 remains incomplete and Part 8 has not started.
 
 ## 8. Prepare portfolio and interview materials
 

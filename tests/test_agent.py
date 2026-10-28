@@ -139,8 +139,8 @@ class OptionsTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(options.system_prompt, load_system_prompt())
         self.assertIn("Bash", options.disallowed_tools)
         self.assertEqual(options.env["ANTHROPIC_BASE_URL"], "https://api.anthropic.com")
-        self.assertNotIn("SQL_ADMIN_PASSWORD", options.env)
-        self.assertNotIn("PINECONE_API_KEY", options.env)
+        self.assertEqual(options.env.get("SQL_ADMIN_PASSWORD", ""), "")
+        self.assertEqual(options.env.get("PINECONE_API_KEY", ""), "")
         self.assertEqual(set(options.mcp_servers), {"coldchain"})
         self.assertEqual(
             (await business_tool_permission("Bash", {}, None)).behavior, "deny"

@@ -21,6 +21,7 @@ from claude_agent_sdk import (
 from claude_agent_sdk.types import StreamEvent
 from src.agent_tools import MCP_TOOL_NAMES, SERVER_NAME, create_business_mcp_server
 from src.config import PROJECT_ROOT, Settings, get_settings
+from pydantic import SecretStr
 from src.services.container import Services, get_services
 from src.services.observability import RequestTrace
 from src.security.execution import RequestBudget
@@ -116,6 +117,13 @@ def build_agent_options(
         hooks=trace.hooks() if trace else None,
         cwd=directory,
         env={
+            **{
+                field.validation_alias: ""
+                for name, field in type(settings).model_fields.items()
+                if name != "anthropic_api_key"
+                and isinstance(getattr(settings, name), SecretStr)
+                and isinstance(field.validation_alias, str)
+            },
             "ANTHROPIC_API_KEY": settings.anthropic_api_key.get_secret_value(),
             "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
             "ANTHROPIC_AUTH_TOKEN": "",

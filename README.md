@@ -1,6 +1,6 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 6: versioned evaluations now cover 30 control, agent, and retrieval cases. See `docs/PART6_COMPLETION.md` for measured results and limits, and `docs/PART6.md` for commands.**
+Independent migration of a cold-chain logistics assistant. **Part 7: the authenticated local website and Docker package are verified. AWS deployment is pending an organization-policy access fix; no public demo URL exists. See `docs/PART7_STATUS.md` and `docs/PART7.md`.**
 
 The agent uses Claude Agent SDK with an in-process MCP server exposing three evidence tools for telemetry, weather, and SOP retrieval, plus a fourth tool that stores a simulated escalation proposal for human review. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
@@ -105,11 +105,11 @@ Local embedding weights must be prepared before starting the agent. If not alrea
 
 ## Remaining phases and limitations
 
-Part 5 approval is local and simulated. Set a separate operator password with `python -m scripts.configure_operator`, then restart the app. Proposals remain disabled until configured. See `docs/PART5.md`. Part 6 adds repeatable evaluations; Part 7 deployment is not started. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
+Part 5 approval is local and simulated. Set a separate operator password with `python -m scripts.configure_operator`, then restart the app. Proposals remain disabled until configured. See `docs/PART5.md`. Part 6 adds repeatable evaluations; Part 7 local deployment is verified; AWS deployment is blocked by account policy. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
 
 Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system or public deployment is claimed. The small evaluation baseline measures specific checks, not general accuracy or human-reviewed faithfulness.
 
-See `MIGRATION_CHECKLIST.md`, `docs/PART6.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+See `MIGRATION_CHECKLIST.md`, `docs/PART7.md`, `docs/PART6.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
 
 To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.
 

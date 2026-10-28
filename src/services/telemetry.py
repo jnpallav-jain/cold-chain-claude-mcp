@@ -10,6 +10,7 @@ from src.services.sql_executor import SqlQueryExecutor
 class TelemetryResult:
     columns: list[str]
     rows: list[tuple]
+    normalized_sql: str | None = None
 
 
 class TelemetryService:
@@ -33,4 +34,4 @@ class TelemetryService:
         columns, rows = SqlQueryExecutor(self.engine, self.settings).execute(
             query, cancellation=cancellation
         )
-        return TelemetryResult(columns, rows)
+        return TelemetryResult(columns, rows, query.sql)

@@ -54,7 +54,9 @@ class FrontendTests(unittest.TestCase):
                 app.session_state["messages"][-1]["content"],
                 "Supported test answer [sample.md]",
             )
-            app.button[0].click().run()
+            next(
+                item for item in app.button if item.label == "New conversation"
+            ).click().run()
             self.assertEqual(len(app.exception), 0)
             self.assertNotEqual(app.session_state["agent_session"].id, before)
             self.assertEqual(app.session_state["messages"], [])

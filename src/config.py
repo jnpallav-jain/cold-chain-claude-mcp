@@ -128,6 +128,31 @@ class Settings(BaseSettings):
     approval_ttl_seconds: int = Field(
         default=900, ge=30, le=3600, validation_alias="APPROVAL_TTL_SECONDS"
     )
+    demo_mode: bool = Field(default=False, validation_alias="DEMO_MODE")
+    demo_user: str = Field(
+        default="reviewer", min_length=1, max_length=64, validation_alias="DEMO_USER"
+    )
+    demo_password_hash: SecretStr = Field(
+        default=SecretStr(""), validation_alias="DEMO_PASSWORD_HASH", repr=False
+    )
+    demo_control_path: Path = Field(
+        default=Path("data/control/demo.sqlite3"), validation_alias="DEMO_CONTROL_PATH"
+    )
+    demo_session_seconds: int = Field(
+        default=3600, ge=60, le=86400, validation_alias="DEMO_SESSION_SECONDS"
+    )
+    demo_max_concurrent: int = Field(
+        default=1, ge=1, le=2, validation_alias="DEMO_MAX_CONCURRENT"
+    )
+    demo_requests_per_hour: int = Field(
+        default=10, ge=1, le=100, validation_alias="DEMO_REQUESTS_PER_HOUR"
+    )
+    demo_request_budget_cents: int = Field(
+        default=15, ge=1, le=50, validation_alias="DEMO_REQUEST_BUDGET_CENTS"
+    )
+    demo_daily_budget_cents: int = Field(
+        default=150, ge=1, le=1000, validation_alias="DEMO_DAILY_BUDGET_CENTS"
+    )
     retrieval_k: int = Field(default=2, ge=1, le=20, validation_alias="RETRIEVAL_K")
     weather_timeout: float = Field(
         default=6, gt=0, le=60, validation_alias="WEATHER_TIMEOUT"

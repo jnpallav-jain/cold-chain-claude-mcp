@@ -1,0 +1,61 @@
+# Overlay on compose.yaml. Model cache prepared locally; secrets are runtime-only.
+services:
+  web:
+    image: cold-chain-claude-mcp-web:local
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-8501}:8501"
+    environment:
+      DEMO_MODE: "true"
+      DEMO_USER: ${DEMO_USER:-reviewer}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH:?Configure demo access locally}
+      APPROVAL_OPERATOR: ${APPROVAL_OPERATOR:-dispatcher}
+      APPROVAL_PASSWORD_HASH: ${APPROVAL_PASSWORD_HASH:?Configure a separate operator locally}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?Set API key locally}
+      PINECONE_API_KEY: ${PINECONE_API_KEY:?Set Pinecone key locally}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-sonnet}
+      CLAUDE_MAX_BUDGET_USD: "0.15"
+      SQL_SERVER_HOST: sqlserver
+      SQL_SERVER_PORT: "1433"
+      SQL_DATABASE: cold_chain_claude_mcp
+      SQL_AGENT_USER: USR_CC_CLAUDE_RO
+      SQL_AGENT_PASSWORD: ${SQL_AGENT_PASSWORD:?Set restricted SQL credentials locally}
+      PINECONE_INDEX_NAME: ${PINECONE_INDEX_NAME:-cold-chain-claude-mcp-sop-local}
+      PINECONE_NAMESPACE: ${PINECONE_NAMESPACE:-sop-v1}
+      DEMO_MAX_CONCURRENT: "1"
+      DEMO_REQUESTS_PER_HOUR: "10"
+      DEMO_REQUEST_BUDGET_CENTS: "15"
+      DEMO_DAILY_BUDGET_CENTS: "150"
+    volumes:
+      - demo-control:/app/data/control
+      - demo-runtime:/app/data/cache
+      - ./data/cache/embeddings:/models:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+      - /home/app:size=64m,uid=10001,gid=10001,mode=700
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 5g
+    restart: unless-stopped
+    init: true
+  bootstrap:
+    image: cold-chain-claude-mcp-web:local
+    profiles: [setup]
+    entrypoint: [python, -m, scripts.bootstrap_resources]
+    command: [--apply, --component, sql]
+    environment:
+      SQL_SERVER_HOST: sqlserver
+      SQL_SERVER_PORT: "1433"
+      SQL_DATABASE: cold_chain_claude_mcp
+      SQL_AGENT_USER: USR_CC_CLAUDE_RO
+      SQL_AGENT_PASSWORD: ${SQL_AGENT_PASSWORD:?Set restricted SQL credentials locally}
+      SQL_ADMIN_PASSWORD: ${SQL_ADMIN_PASSWORD:?Set bootstrap SQL admin password locally}
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+volumes:
+  demo-control:
+  demo-runtime:
+# Administrative bootstrap is a separate, one-off profile; the web service never receives this password.

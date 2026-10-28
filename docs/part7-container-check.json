@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "platform": "Linux",
+  "architecture": "aarch64",
+  "uid": 10001,
+  "odbc_driver_present": true,
+  "configuration_present": true,
+  "deep": true,
+  "admin_password_present_in_app": false,
+  "sql_view_read": true,
+  "sql_audit_insert": true,
+  "pinecone_retrieval": true,
+  "local_embedding_loaded": true,
+  "sdk_runtime_initialized": true,
+  "model_request_made": false,
+  "torch_cuda_available": false,
+  "elapsed_seconds": 7.347,
+  "process_peak_rss_bytes": 2209349632
+}
