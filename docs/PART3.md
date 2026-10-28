@@ -75,3 +75,7 @@ Part 4 remains a separate step requiring confirmation.
 - [Permission evaluation](https://code.claude.com/docs/en/agent-sdk/permissions)
 - [Session behavior](https://code.claude.com/docs/en/agent-sdk/sessions)
 - [Streaming output](https://code.claude.com/docs/en/agent-sdk/streaming-output)
+
+## Live verification result
+
+The authorized live smoke scenario passed: all three MCP tools ran without tool errors, the answer cited the SOP filename, and a follow-up retained the same SDK session. The runtime reported exactly the three business tools. See `part3-live-check.json` for evidence and `PART3_STATUS.md` for the completion summary. This is a smoke check, not a measured answer-quality score.

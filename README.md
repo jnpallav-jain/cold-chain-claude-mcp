@@ -1,6 +1,6 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 3: Claude Agent SDK and MCP orchestration are implemented. Live verification is pending an Anthropic key and test-data approval; see `docs/PART3_STATUS.md`.**
+Independent migration of a cold-chain logistics assistant. **Part 3: Claude Agent SDK and MCP orchestration are implemented. Offline checks and an authorized live workflow passed; see `docs/PART3_STATUS.md`.**
 
 The agent uses Claude Agent SDK with an in-process MCP server exposing three business tools. They call framework-independent Python services for telemetry, weather, and SOP retrieval. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 

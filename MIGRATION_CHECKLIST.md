@@ -48,9 +48,9 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 - [x] Stream model output and tool events through a UI-independent application interface.
 - [x] Preserve source metadata and citations in SOP results.
 - [x] Remove unused LangGraph dependencies; retain LangChain retrieval utilities only where useful.
-- [ ] Demonstrate an end-to-end question using telemetry, weather, and SOP evidence.
+- [x] Demonstrate an end-to-end question using telemetry, weather, and SOP evidence.
 
-**Completion pending:** Implementation and 33 offline checks are ready. A real Anthropic API key and approval for the live test data transfer are required to verify end-to-end Claude execution. See the Part 3 status report. Do not start Part 4 yet.
+**Completion:** Verified with 33 offline checks and an authorized live Claude workflow using all three MCP tools, an SOP citation, and same-session follow-up. See the Part 3 completion report. Part 4 awaits user confirmation.
 
 **Scope:** An in-process SDK MCP server is the first implementation. A remotely hosted MCP endpoint is optional and requires separate transport authentication and deployment work.
 
@@ -137,7 +137,7 @@ Suggested resume wording after completion:
 ## Milestones and scope
 
 - [x] **Milestone A:** Independent project copy and isolated resources.
-- [ ] **Milestone B:** Local Claude Agent SDK + MCP workflow.
+- [x] **Milestone B:** Local Claude Agent SDK + MCP workflow.
 - [ ] **Milestone C:** Verified permissions, approval workflow, and evaluation report.
 - [ ] **Milestone D:** Deployed demo and portfolio materials.
 
