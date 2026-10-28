@@ -1,0 +1,5 @@
+timestamp,vehicle_gps_latitude,vehicle_gps_longitude,iot_temperature,cargo_condition_status,risk_classification,delay_probability,port_congestion_level,route_risk_level
+2025-01-01 08:00:00,33.77,-118.19,2.5,0.9,Low Risk,0.1,2.0,1.0
+2025-01-01 09:00:00,34.05,-118.24,7.0,0.4,High Risk,0.8,8.0,8.0
+2025-01-01 10:00:00,34.1,-117.29,4.0,0.8,Moderate Risk,0.4,5.0,4.0
+2025-01-01 11:00:00,33.94,-118.4,4.1,0.5,High Risk,0.65,7.0,6.0
