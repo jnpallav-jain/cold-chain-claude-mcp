@@ -1,8 +1,8 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 4: Claude SDK/MCP orchestration now includes parsed SQL validation, native query cancellation, and bounded tool execution. See `docs/PART4_COMPLETION.md` for verification.**
+Independent migration of a cold-chain logistics assistant. **Part 5: backend execution traces and authenticated human approval for local simulated incidents are implemented. See `docs/PART5_COMPLETION.md` for verification and `docs/PART5.md` for operator setup.**
 
-The agent uses Claude Agent SDK with an in-process MCP server exposing three business tools. They call framework-independent Python services for telemetry, weather, and SOP retrieval. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
+The agent uses Claude Agent SDK with an in-process MCP server exposing three evidence tools for telemetry, weather, and SOP retrieval, plus a fourth tool that stores a simulated escalation proposal for human review. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
 ## Install and configure
 
@@ -73,6 +73,8 @@ The offline suite uses fixture data and injected dependencies. The live command 
 - `src/services/weather.py`: timestamped weather plus a clearly labeled wind-based demonstration heuristic.
 - `src/services/sop.py`: lazy dense embedding model and Pinecone retrieval, preserving source metadata.
 - `src/services/audit.py`: parameterized audit persistence and admin-only inspection interface.
+- `src/services/observability.py`: request traces and SDK tool hooks with IDs, timings, usage/cost, redaction, and visible persistence failures.
+- `src/services/approvals.py`: persistent local proposal/decision ledger and authenticated, atomic simulated incident creation.
 - `src/services/documents.py`, `ingestion.py`, `loader.py`: document parsing and isolated ingestion.
 - `src/agent_tools.py`: validated Claude SDK MCP adapters over the business services.
 - `src/orchestrator.py`: shared Claude runner, streamed events, and isolated session continuation.
@@ -87,7 +89,7 @@ python -m src.cli --question "What is the fresh perishables temperature threshol
 streamlit run src/ui.py
 ```
 
-The CLI supports `/reset` and `/quit`. The UI supports New conversation. SDK session files stay under the ignored `data/cache/agent-runtime/` directory. No most-recent-global-session resume is used. Both entry points load the same system prompt. Restart the running app after changing `.env`; settings and service instances are cached per process. Backend logging now records basic tool and completion events for either entry point; fuller observability is Part 5.
+The CLI supports `/reset`, `/approvals`, and `/quit`. The UI supports New conversation. SDK session files stay under the ignored `data/cache/agent-runtime/` directory. No most-recent-global-session resume is used. Both entry points load the same system prompt. Restart the running app after changing `.env`; settings and service instances are cached per process. Backend tracing records request and tool lifecycles independently of the UI. SQL audit failures produce visible warnings. Approval decisions require their separate SQLite ledger to commit atomically.
 
 For offline integration checks, run the unit tests. `python -m scripts.verify_sdk_runtime` checks bundled-runtime startup without a model request. The separate `python -m scripts.verify_agent --live` command makes paid Claude calls and sends retrieved evidence to Anthropic; use it only after authorizing that transfer. See `docs/PART3.md` and the Part 3 verification report for the exact verification status.
 
@@ -103,10 +105,10 @@ Local embedding weights must be prepared before starting the agent. If not alrea
 
 ## Remaining phases and limitations
 
-Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
+Part 5 approval is local and simulated. Set a separate operator password with `python -m scripts.configure_operator`, then restart the app. Proposals remain disabled until configured. See `docs/PART5.md`. Part 6 adds agent evaluations; Part 7 deploys the website. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
 
 Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system, public deployment, or measured answer-quality score is claimed.
 
-See `MIGRATION_CHECKLIST.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+See `MIGRATION_CHECKLIST.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
 
 To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.

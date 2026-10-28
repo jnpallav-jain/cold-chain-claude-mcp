@@ -73,17 +73,17 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 5. Add backend observability and human approval
 
-- [ ] Record session ID, tool-call ID, tool name, inputs, outputs, status, errors, and timestamps.
-- [ ] Capture tool latency, request duration, and SDK-reported usage/cost where available.
-- [ ] Define audit-write failure behavior and make failures observable.
-- [ ] Keep audit logging functional without Streamlit.
-- [ ] Add a proposed incident-escalation action using a simulated internal incident record.
-- [ ] Store pending approval outside model-controlled messages and bind approval to the specific action and session.
-- [ ] Require authenticated human approval before creating the incident record.
-- [ ] Record approval, rejection, and execution; prevent duplicate execution.
-- [ ] Clearly label the escalation as a simulation with no external notification.
+- [x] Record session ID, tool-call ID, tool name, inputs, outputs, status, errors, and timestamps.
+- [x] Capture tool latency, request duration, and SDK-reported usage/cost where available.
+- [x] Define audit-write failure behavior and make failures observable.
+- [x] Keep audit logging functional without Streamlit.
+- [x] Add a proposed incident-escalation action using a simulated internal incident record.
+- [x] Store pending approval outside model-controlled messages and bind approval to the specific action and session.
+- [x] Require authenticated human approval before creating the incident record.
+- [x] Record approval, rejection, and execution; prevent duplicate execution.
+- [x] Clearly label the escalation as a simulation with no external notification.
 
-**Completion:** An action cannot execute without the correct approval, and its complete decision trail is inspectable.
+**Completion:** Verified with 68 offline tests and a live Claude proposal/SQL audit workflow using a temporary authenticated operator. Wrong credentials/session and duplicate execution were blocked. Human operator setup for manual use remains an explicit local configuration step; no password was installed by tests. See `docs/PART5_COMPLETION.md`. Part 6 awaits user confirmation.
 
 ## 6. Build repeatable evaluations
 

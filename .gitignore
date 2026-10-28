@@ -20,3 +20,6 @@ build/
 dist/
 .pytest_cache/
 .ruff_cache/
+
+# Persistent local approval/incident ledger (never commit user decisions).
+data/control/

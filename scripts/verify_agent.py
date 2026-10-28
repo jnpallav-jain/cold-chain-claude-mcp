@@ -35,7 +35,7 @@ async def verify(output):
         raise RuntimeError(
             "Live agent did not complete. Check credentials, model access, and runtime availability."
         )
-    if not set(MCP_TOOL_NAMES).issubset(called):
+    if not set(MCP_TOOL_NAMES[:3]).issubset(called):
         raise RuntimeError("Live smoke question did not exercise all three MCP tools.")
     if any(
         event.data.get("is_error") for event in events if event.kind == "tool_result"

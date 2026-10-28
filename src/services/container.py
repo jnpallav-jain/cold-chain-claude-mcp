@@ -5,6 +5,7 @@ from src.services.telemetry import TelemetryService
 from src.services.weather import WeatherService
 from src.services.sop import SopService
 from src.services.audit import AuditService
+from src.services.approvals import ApprovalService
 
 
 @dataclass(frozen=True)
@@ -13,6 +14,7 @@ class Services:
     weather: WeatherService
     sop: SopService
     audit: AuditService
+    approvals: ApprovalService | None = None
 
 
 @lru_cache(maxsize=1)
@@ -23,4 +25,5 @@ def get_services():
         WeatherService(settings),
         SopService(settings),
         AuditService(settings),
+        ApprovalService(settings),
     )

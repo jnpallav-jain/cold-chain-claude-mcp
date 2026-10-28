@@ -2,8 +2,6 @@
 
 import asyncio
 from dataclasses import dataclass, field
-import json
-import logging
 import threading
 from typing import AsyncIterator, Any
 from uuid import uuid4
@@ -24,11 +22,10 @@ from claude_agent_sdk.types import StreamEvent
 from src.agent_tools import MCP_TOOL_NAMES, SERVER_NAME, create_business_mcp_server
 from src.config import PROJECT_ROOT, Settings, get_settings
 from src.services.container import Services, get_services
-from src.services.audit import AuditEvent
-from src.security.execution import RequestBudget, get_workers
+from src.services.observability import RequestTrace
+from src.security.execution import RequestBudget
 from src.security.redaction import Redactor, StreamingRedactor
 
-logger = logging.getLogger(__name__)
 PROMPT_PATH = PROJECT_ROOT / "src/prompts/system_prompt.txt"
 RUNTIME_ROOT = PROJECT_ROOT / "data/cache/agent-runtime"
 
@@ -72,7 +69,9 @@ async def business_tool_permission(name, arguments, context):
     )
 
 
-def build_agent_options(settings: Settings, services: Services, session: AgentSession):
+def build_agent_options(
+    settings: Settings, services: Services, session: AgentSession, *, trace=None
+):
     settings.require("anthropic_api_key", "claude_model")
     # Private runtime directory prevents unrelated project config and transcripts from being loaded.
     directory = RUNTIME_ROOT / session.id
@@ -101,6 +100,7 @@ def build_agent_options(settings: Settings, services: Services, session: AgentSe
             SERVER_NAME: create_business_mcp_server(
                 services,
                 settings=settings,
+                session_id=session.id,
                 budget=RequestBudget(
                     settings.claude_request_timeout, settings.claude_max_tool_calls
                 ),
@@ -113,6 +113,7 @@ def build_agent_options(settings: Settings, services: Services, session: AgentSe
         agents={},
         permission_mode="default",
         can_use_tool=business_tool_permission,
+        hooks=trace.hooks() if trace else None,
         cwd=directory,
         env={
             "ANTHROPIC_API_KEY": settings.anthropic_api_key.get_secret_value(),
@@ -147,27 +148,6 @@ class AgentRunner:
         self.client_factory = client_factory
         self.redactor = Redactor(self.settings)
 
-    async def _audit(self, session: AgentSession, event: AgentEvent):
-        if event.kind not in {"tool_start", "tool_result", "complete", "error"}:
-            return True
-        try:
-            record = AuditEvent(
-                session.id,
-                event.kind,
-                str(event.data.get("name", "claude"))[:100],
-                json.dumps(
-                    self.redactor.data(event.data), ensure_ascii=False, default=str
-                ),
-            )
-            await get_workers(1, "audit").run(
-                lambda: self.services.audit.write(record),
-                seconds=min(5, self.settings.tool_timeout),
-            )
-            return True
-        except Exception:
-            logger.error("Agent event could not be persisted to audit storage.")
-            return False
-
     async def stream_turn(
         self, session: AgentSession, prompt: str
     ) -> AsyncIterator[AgentEvent]:
@@ -185,9 +165,30 @@ class AgentRunner:
             )
             return
         final_seen = False
+        trace = RequestTrace(self.settings, self.services.audit, session.id)
+        status = "interrupted"
+        metrics = {}
+        warned = 0
         captured_sdk_id = session.sdk_session_id
         try:
-            options = build_agent_options(self.settings, self.services, session)
+            if not await trace.write(
+                "request_start",
+                {
+                    "status": "started",
+                    "prompt": prompt,
+                    "model_setting": self.settings.claude_model,
+                },
+            ):
+                yield AgentEvent(
+                    "audit_warning",
+                    {
+                        "message": "Request audit storage is unavailable; read-only answers may continue. Approval decisions require their own durable ledger."
+                    },
+                )
+                warned = trace.warnings
+            options = build_agent_options(
+                self.settings, self.services, session, trace=trace
+            )
             tool_names = {}
             assistant_text = []
             stream_redactor = StreamingRedactor(self.redactor)
@@ -276,6 +277,16 @@ class AgentRunner:
                                     )
                         elif isinstance(message, ResultMessage):
                             final_seen = True
+                            status = "error" if message.is_error else "success"
+                            metrics = {
+                                "sdk_duration_ms": message.duration_ms,
+                                "sdk_api_duration_ms": message.duration_api_ms,
+                                "sdk_reported_cost_usd": message.total_cost_usd,
+                                "usage": message.usage or {},
+                                "model_usage": message.model_usage or {},
+                                "turns": message.num_turns,
+                                "cost_scope": "SDK-reported total; may be cumulative for resumed sessions; do not sum across turns.",
+                            }
                             if message.is_error:
                                 # Avoid accidentally resuming an incomplete/ambiguous turn after an SDK failure.
                                 session.sdk_session_id = None
@@ -303,6 +314,7 @@ class AgentRunner:
                                             "model_usage": message.model_usage or {},
                                             "turns": message.num_turns,
                                             "session_id": session.id,
+                                            **metrics,
                                         },
                                     )
                                 )
@@ -311,10 +323,16 @@ class AgentRunner:
                             if tail:
                                 yield AgentEvent("text_delta", {"text": tail})
                         for event in events:
-                            event = AgentEvent(
-                                event.kind, self.redactor.data(event.data)
-                            )
-                            if not await self._audit(session, event):
+                            event = AgentEvent(event.kind, trace.enrich(event.data))
+                            if event.kind in {
+                                "tool_start",
+                                "tool_result",
+                                "complete",
+                                "error",
+                            }:
+                                await trace.write(event.kind, event.data)
+                            if trace.warnings > warned:
+                                warned = trace.warnings
                                 yield AgentEvent(
                                     "audit_warning",
                                     {
@@ -324,17 +342,30 @@ class AgentRunner:
                             yield event
             if not final_seen:
                 session.sdk_session_id = None
-                yield AgentEvent(
+                status = "error"
+                event = AgentEvent(
                     "error",
-                    {"message": "Claude disconnected before completing the request."},
+                    trace.enrich(
+                        {
+                            "message": "Claude disconnected before completing the request."
+                        }
+                    ),
                 )
+                await trace.write("error", event.data)
+                yield event
         except TimeoutError:
             session.sdk_session_id = None
             event = AgentEvent(
                 "error", {"message": "Request exceeded the configured time limit."}
             )
-            await self._audit(session, event)
-            yield event
+            status = "timeout"
+            if not await trace.write("error", event.data):
+                yield AgentEvent(
+                    "audit_warning",
+                    {"message": "Error event could not be saved to the audit log."},
+                )
+                warned = trace.warnings
+            yield AgentEvent(event.kind, trace.enrich(event.data))
         except Exception as error:
             session.sdk_session_id = None
             message = "Claude request failed. Check credentials, model access, and service availability."
@@ -345,9 +376,25 @@ class AgentRunner:
             event = AgentEvent(
                 "error", {"message": message, "category": type(error).__name__}
             )
-            await self._audit(session, event)
-            yield event
+            status = "error"
+            if not await trace.write("error", event.data):
+                yield AgentEvent(
+                    "audit_warning",
+                    {"message": "Error event could not be saved to the audit log."},
+                )
+                warned = trace.warnings
+            yield AgentEvent(event.kind, trace.enrich(event.data))
         finally:
-            if not final_seen:
-                session.sdk_session_id = None
-            session._lock.release()
+            try:
+                await trace.close(status, metrics)
+            finally:
+                if not final_seen:
+                    session.sdk_session_id = None
+                session._lock.release()
+        if trace.warnings > warned:
+            yield AgentEvent(
+                "audit_warning",
+                {
+                    "message": "One or more execution events were not saved to the audit log."
+                },
+            )

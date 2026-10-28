@@ -12,6 +12,7 @@ from claude_agent_sdk import tool, create_sdk_mcp_server
 from mcp.types import ToolAnnotations
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from src.services.container import Services
+from src.services.approvals import IncidentProposal
 from src.services.errors import ServiceError, TransientServiceError
 from src.services.sql_executor import QueryCancellation
 from src.config import get_settings
@@ -23,6 +24,7 @@ TOOL_NAMES = (
     "query_telemetry_db",
     "fetch_corridor_conditions",
     "search_compliance_sop",
+    "propose_incident_escalation",
 )
 MCP_TOOL_NAMES = tuple(f"mcp__{SERVER_NAME}__{name}" for name in TOOL_NAMES)
 
@@ -69,7 +71,7 @@ def tool_result(
     return {"content": [{"type": "text", "text": encoded}], "is_error": error}
 
 
-def build_mcp_tools(services: Services, *, settings=None, budget=None):
+def build_mcp_tools(services: Services, *, settings=None, budget=None, session_id=None):
     settings = settings if settings is not None else get_settings()
     budget = (
         budget
@@ -169,12 +171,35 @@ def build_mcp_tools(services: Services, *, settings=None, budget=None):
             },
         )
 
-    return [telemetry, weather, sop]
+    @tool(
+        "propose_incident_escalation",
+        "Propose a SIMULATED internal incident for human review. Only use when the user requests an escalation proposal, after obtaining telemetry and SOP evidence. Stores a pending proposal; cannot approve, create an incident, notify anyone, or execute real actions. Never accepts approval credentials or a session ID. A human must review and authenticate separately in the application.",
+        IncidentProposal.model_json_schema(),
+        annotations=ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def propose(args):
+        def operation(**values):
+            if services.approvals is None or session_id is None:
+                raise ServiceError("Approval control plane is unavailable.")
+            return services.approvals.propose(session_id, **values)
+
+        return await invoke(IncidentProposal, args, operation)
+
+    return [telemetry, weather, sop, propose]
 
 
-def create_business_mcp_server(services: Services, *, settings=None, budget=None):
+def create_business_mcp_server(
+    services: Services, *, settings=None, budget=None, session_id=None
+):
     return create_sdk_mcp_server(
         name=SERVER_NAME,
-        version="0.4.0",
-        tools=build_mcp_tools(services, settings=settings, budget=budget),
+        version="0.5.0",
+        tools=build_mcp_tools(
+            services, settings=settings, budget=budget, session_id=session_id
+        ),
     )

@@ -62,3 +62,64 @@ class FrontendTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ApprovalFrontendTests(unittest.TestCase):
+    def test_authenticated_ui_creates_simulation_and_resets_isolate_proposals(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import Mock
+        from src.services.approvals import ApprovalService, password_hash
+        from src.services.container import Services
+
+        password = "fixture-ui-operator-password"
+        config = Settings(
+            _env_file=None, approval_password_hash=password_hash(password)
+        )
+        with TemporaryDirectory() as directory:
+            approvals = ApprovalService(config, path=Path(directory) / "approval.db")
+            business = Services(Mock(), Mock(), Mock(), Mock(), approvals)
+            with (
+                patch("src.config.get_settings", return_value=config),
+                patch("src.services.container.get_services", return_value=business),
+            ):
+                app = AppTest.from_file(str(PROJECT_ROOT / "src/ui.py")).run()
+                session_id = app.session_state["agent_session"].id
+                proposal = approvals.propose(
+                    session_id,
+                    summary="Synthetic high-temperature incident",
+                    evidence="Synthetic historical reading 7 C.",
+                    sop_reference="sample.md / Temperature above 4 C",
+                )
+                app.run()
+                self.assertEqual(len(app.exception), 0)
+                next(
+                    item for item in app.text_input if item.label == "Operator password"
+                ).set_value(password)
+                next(item for item in app.radio if item.label == "Decision").set_value(
+                    "Approve and create simulated incident"
+                )
+                app.checkbox[0].check()
+                next(
+                    item for item in app.button if item.label == "Submit human decision"
+                ).click().run()
+                self.assertEqual(len(app.exception), 0)
+                self.assertEqual(
+                    approvals.list_for_session(session_id)[0]["status"], "executed"
+                )
+                self.assertTrue(
+                    any("Simulation only" in item.value for item in app.success)
+                )
+                self.assertNotIn(password, str(app.json))
+                next(
+                    item for item in app.button if item.label == "New conversation"
+                ).click().run()
+                self.assertNotEqual(app.session_state["agent_session"].id, session_id)
+                self.assertEqual(
+                    approvals.list_for_session(app.session_state["agent_session"].id),
+                    [],
+                )
+                self.assertEqual(
+                    approvals.list_for_session(session_id)[0]["proposal_id"],
+                    proposal["proposal_id"],
+                )

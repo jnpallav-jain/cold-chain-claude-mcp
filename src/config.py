@@ -112,6 +112,22 @@ class Settings(BaseSettings):
     claude_request_timeout: float = Field(
         default=120, gt=0, le=600, validation_alias="CLAUDE_REQUEST_TIMEOUT"
     )
+    approval_operator: str = Field(
+        default="dispatcher",
+        min_length=1,
+        max_length=64,
+        validation_alias="APPROVAL_OPERATOR",
+    )
+    approval_password_hash: SecretStr = Field(
+        default=SecretStr(""), validation_alias="APPROVAL_PASSWORD_HASH", repr=False
+    )
+    approval_db_path: Path = Field(
+        default=Path("data/control/approvals.sqlite3"),
+        validation_alias="APPROVAL_DB_PATH",
+    )
+    approval_ttl_seconds: int = Field(
+        default=900, ge=30, le=3600, validation_alias="APPROVAL_TTL_SECONDS"
+    )
     retrieval_k: int = Field(default=2, ge=1, le=20, validation_alias="RETRIEVAL_K")
     weather_timeout: float = Field(
         default=6, gt=0, le=60, validation_alias="WEATHER_TIMEOUT"

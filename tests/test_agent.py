@@ -78,6 +78,7 @@ class McpProtocolTests(unittest.IsolatedAsyncioTestCase):
                             "query_telemetry_db",
                             "fetch_corridor_conditions",
                             "search_compliance_sop",
+                            "propose_incident_escalation",
                         },
                     )
                     for name, args in [
@@ -267,7 +268,7 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
             ],
         )
         self.assertEqual(self.session.sdk_session_id, "sdk-session-one")
-        self.assertEqual(self.business.audit.write.call_count, 3)
+        self.assertEqual(self.business.audit.write.call_count, 5)
         await self.collect("Follow-up")
         self.assertEqual(FakeClient.options_seen[-1].resume, "sdk-session-one")
         other = AgentSession()
@@ -291,10 +292,11 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
     async def test_audit_failure_is_visible_but_does_not_change_answer(self):
         FakeClient.messages = [result()]
         self.business.audit.write.side_effect = ServiceError("Audit write failed.")
-        with self.assertLogs("src.orchestrator", level="ERROR"):
+        with self.assertLogs("src.services.observability", level="ERROR"):
             events = await self.collect()
         self.assertEqual(
-            [event.kind for event in events], ["audit_warning", "complete"]
+            [event.kind for event in events],
+            ["audit_warning", "audit_warning", "complete", "audit_warning"],
         )
 
     async def test_busy_session_and_empty_input_do_not_start_client(self):

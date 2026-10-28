@@ -95,6 +95,73 @@ if mode == "Dispatch console":
             st.session_state.messages.append(
                 {"role": "assistant", "content": content, "traces": traces}
             )
+    st.divider()
+    st.subheader("Human approval · simulation only")
+    st.caption(
+        "Creates a local simulated incident record after authenticated approval. No driver contact, external notification, or shipment change."
+    )
+    approvals = get_services().approvals
+    if approvals is None or not approvals.configured:
+        st.info(
+            "Operator approval is disabled. Run python -m scripts.configure_operator in the project terminal to set a separate operator password."
+        )
+    else:
+        try:
+            proposals = approvals.list_for_session(st.session_state.agent_session.id)
+            if not proposals:
+                st.caption("No escalation proposals in this conversation.")
+            for proposal in proposals:
+                with st.expander(
+                    f"{proposal['status'].upper()} · {proposal['proposal_id'][:8]}"
+                ):
+                    # Model-supplied text is rendered as JSON, never as a control or credential prompt.
+                    st.json(proposal)
+                    if proposal["status"] == "pending":
+                        with st.form(
+                            "decision_" + proposal["proposal_id"], clear_on_submit=True
+                        ):
+                            operator = st.text_input(
+                                "Operator", value=settings.approval_operator
+                            )
+                            operator_password = st.text_input(
+                                "Operator password", type="password"
+                            )
+                            choice = st.radio(
+                                "Decision",
+                                ["Reject", "Approve and create simulated incident"],
+                            )
+                            reviewed = st.checkbox(
+                                "I reviewed this exact proposal and its supporting evidence."
+                            )
+                            commit = st.form_submit_button("Submit human decision")
+                        if commit:
+                            if not reviewed:
+                                st.warning(
+                                    "Review the proposal and confirm before submitting."
+                                )
+                            else:
+                                try:
+                                    outcome = approvals.decide(
+                                        st.session_state.agent_session.id,
+                                        proposal["proposal_id"],
+                                        proposal["digest"],
+                                        "approve"
+                                        if choice.startswith("Approve")
+                                        else "reject",
+                                        operator=operator,
+                                        password=operator_password,
+                                    )
+                                    st.success(
+                                        "Human decision saved. Simulation only; no external notification."
+                                    )
+                                    st.json(outcome)
+                                except ServiceError as error:
+                                    st.error(str(error))
+            if proposals:
+                with st.expander("Durable approval decision trail"):
+                    st.json(approvals.trail(st.session_state.agent_session.id))
+        except ServiceError as error:
+            st.error(str(error))
 else:
     st.subheader("Administrative audit viewer")
     with st.form("audit_login"):
