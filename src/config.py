@@ -72,16 +72,19 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="OPENAI_API_KEY", repr=False
     )
-    deepseek_api_key: SecretStr = Field(
-        default=SecretStr(""), validation_alias="DEEPSEEK_API_KEY", repr=False
-    )
-    agent_llm: Literal["DEEPSEEK", "OPENAI", "OLLAMA"] = Field(
-        default="DEEPSEEK", validation_alias=AliasChoices("AGENT_LLM", "Agent_llm")
-    )
     anthropic_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="ANTHROPIC_API_KEY", repr=False
     )
-    claude_model: str = Field(default="", validation_alias="CLAUDE_MODEL")
+    claude_model: str = Field(default="sonnet", validation_alias="CLAUDE_MODEL")
+    claude_max_turns: int = Field(
+        default=8, ge=1, le=30, validation_alias="CLAUDE_MAX_TURNS"
+    )
+    claude_max_budget_usd: float = Field(
+        default=0.5, gt=0, le=10, validation_alias="CLAUDE_MAX_BUDGET_USD"
+    )
+    claude_request_timeout: float = Field(
+        default=120, gt=0, le=600, validation_alias="CLAUDE_REQUEST_TIMEOUT"
+    )
     retrieval_k: int = Field(default=2, ge=1, le=20, validation_alias="RETRIEVAL_K")
     weather_timeout: float = Field(
         default=6, gt=0, le=60, validation_alias="WEATHER_TIMEOUT"

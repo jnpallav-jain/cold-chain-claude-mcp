@@ -38,19 +38,19 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 3. Implement Claude Agent SDK and MCP tools
 
-- [ ] Verify current SDK documentation and pin compatible dependencies.
-- [ ] Configure Claude API authentication through server-side environment settings.
-- [ ] Implement orchestration using `ClaudeSDKClient` in place of the LangGraph state graph.
-- [ ] Expose `query_telemetry_db`, `fetch_corridor_conditions`, and `search_compliance_sop` through `create_sdk_mcp_server`.
-- [ ] Define tool argument schemas, descriptions, structured results, and error behavior.
-- [ ] Apply the system instructions consistently in CLI and UI entry points.
-- [ ] Define session creation, continuation, reset, and isolation behavior.
-- [ ] Stream model output and tool events through a UI-independent application interface.
-- [ ] Preserve source metadata and citations in SOP results.
-- [ ] Remove unused LangGraph dependencies; retain LangChain retrieval utilities only where useful.
+- [x] Verify current SDK documentation and pin compatible dependencies.
+- [x] Configure Claude API authentication through server-side environment settings.
+- [x] Implement orchestration using `ClaudeSDKClient` in place of the LangGraph state graph.
+- [x] Expose `query_telemetry_db`, `fetch_corridor_conditions`, and `search_compliance_sop` through `create_sdk_mcp_server`.
+- [x] Define tool argument schemas, descriptions, structured results, and error behavior.
+- [x] Apply the system instructions consistently in CLI and UI entry points.
+- [x] Define session creation, continuation, reset, and isolation behavior.
+- [x] Stream model output and tool events through a UI-independent application interface.
+- [x] Preserve source metadata and citations in SOP results.
+- [x] Remove unused LangGraph dependencies; retain LangChain retrieval utilities only where useful.
 - [ ] Demonstrate an end-to-end question using telemetry, weather, and SOP evidence.
 
-**Completion:** Claude completes the workflow through the in-process MCP tools and produces an evidence-backed answer.
+**Completion pending:** Implementation and 33 offline checks are ready. A real Anthropic API key and approval for the live test data transfer are required to verify end-to-end Claude execution. See the Part 3 status report. Do not start Part 4 yet.
 
 **Scope:** An in-process SDK MCP server is the first implementation. A remotely hosted MCP endpoint is optional and requires separate transport authentication and deployment work.
 

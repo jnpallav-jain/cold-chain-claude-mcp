@@ -1,8 +1,8 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 2: reusable services and isolated resources are implemented. Claude Agent SDK and MCP orchestration are planned for Part 3.**
+Independent migration of a cold-chain logistics assistant. **Part 3: Claude Agent SDK and MCP orchestration are implemented. Live verification is pending an Anthropic key and test-data approval; see `docs/PART3_STATUS.md`.**
 
-The retained agent uses LangGraph. Its tools now call framework-independent Python services for telemetry, weather, and SOP retrieval. Audit persistence is also a backend service. Service imports make no model or network calls.
+The agent uses Claude Agent SDK with an in-process MCP server exposing three business tools. They call framework-independent Python services for telemetry, weather, and SOP retrieval. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
 ## Install and configure
 
@@ -18,7 +18,7 @@ python -m pip check
 
 Copy `.env.example` to `.env` only when no local `.env` exists; supply credentials locally. The current development instance already has an ignored `.env`. Never overwrite its generated SQL passwords or commit it. `.env.example` documents all supported settings.
 
-`src/config.py` resolves relative data paths from the project root. It accepts the inherited `Agent_llm`, `Embeddings_model`, and `Local_Embedding_Model` names as aliases. New configuration should use the uppercase names in the example.
+`src/config.py` resolves relative data paths from the project root. It accepts the inherited `Embeddings_model` and `Local_Embedding_Model` names as embedding aliases. Legacy DeepSeek/Ollama model selection has been retired. New configuration should use the uppercase names in the example.
 
 ## Isolated development resources
 
@@ -74,17 +74,29 @@ The offline suite uses fixture data and injected dependencies. The live command 
 - `src/services/sop.py`: lazy dense embedding model and Pinecone retrieval, preserving source metadata.
 - `src/services/audit.py`: parameterized audit persistence and admin-only inspection interface.
 - `src/services/documents.py`, `ingestion.py`, `loader.py`: document parsing and isolated ingestion.
-- `src/agent_tools.py`: temporary LangChain adapters; Part 3 replaces these with MCP adapters.
-- `src/ui.py`: retained Streamlit UI, now using backend audit persistence and centralized database settings.
+- `src/agent_tools.py`: validated Claude SDK MCP adapters over the business services.
+- `src/orchestrator.py`: shared Claude runner, streamed events, and isolated session continuation.
+- `src/cli.py`: terminal chat and single-question entry point.
+- `src/ui.py`: Streamlit frontend consuming the same runner as the CLI, plus an administrative audit viewer.
 
-The UI still emits audit events; full SDK-level lifecycle tracing belongs to Part 5. The retained graph requires its configured legacy model credentials and still has the original UI/system-prompt gap. Do not interpret service verification as an end-to-end agent evaluation. The intended UI entry point remains `streamlit run src/ui.py` after orchestration migration.
+Set `ANTHROPIC_API_KEY` and `CLAUDE_MODEL` in `.env` before running the agent:
+
+```bash
+python -m src.cli
+python -m src.cli --question "What is the fresh perishables temperature threshold?"
+streamlit run src/ui.py
+```
+
+The CLI supports `/reset` and `/quit`. The UI supports New conversation. SDK session files stay under the ignored `data/cache/agent-runtime/` directory. No most-recent-global-session resume is used. Both entry points load the same system prompt. Restart the running app after changing `.env`; settings and service instances are cached per process. Backend logging now records basic tool and completion events for either entry point; fuller observability is Part 5.
+
+For offline integration checks, run the unit tests. `python -m scripts.verify_sdk_runtime` checks bundled-runtime startup without a model request. The separate `python -m scripts.verify_agent --live` command makes paid Claude calls and sends retrieved evidence to Anthropic; use it only after authorizing that transfer. See `docs/PART3.md` and the Part 3 verification report for the exact verification status.
 
 ## Remaining phases and limitations
 
-Part 3 migrates to Claude Agent SDK and in-process MCP. Part 4 adds parsed SQL validation, execution cancellation and budgets, and explicit agent tool restrictions. The current SELECT-prefix check is secondary; returned-row limits do not bound query cost. Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website.
+Part 4 adds parsed SQL validation, execution cancellation and budgets, and explicit agent tool restrictions. The current SELECT-prefix check is secondary; returned-row limits do not bound query cost. Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website.
 
-Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. No Claude runtime, multi-agent system, public deployment, or measured answer-quality score is claimed yet.
+Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system, public deployment, or measured answer-quality score is claimed.
 
-See `MIGRATION_CHECKLIST.md`, `docs/PART2.md`, and `docs/BASELINE.md` for status. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+See `MIGRATION_CHECKLIST.md` and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
 
 To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.

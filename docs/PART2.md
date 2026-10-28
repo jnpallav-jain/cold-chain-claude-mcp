@@ -1,4 +1,6 @@
-# Part 2 — Business services and isolated configuration
+# Historical Part 2 — Business services and isolated configuration
+
+Part 3 replaces the temporary LangGraph adapter described below. See `PART3.md` and `PART3_STATUS.md` for current implementation and verification status.
 
 The original project is preserved. This phase extracts telemetry, weather, SOP retrieval, and audit persistence into plain Python services with explicit settings and injectable connections. LangGraph remains only as the temporary orchestration adapter; the Claude migration has not started.
 

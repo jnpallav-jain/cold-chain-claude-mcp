@@ -4,10 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cold-chain-claude-mcp"
-version = "0.1.0"
-description = "Independent cold-chain agent migration baseline; Claude SDK integration planned"
+version = "0.3.0"
+description = "Cold-chain assistant using Claude Agent SDK and in-process MCP tools"
 requires-python = ">=3.12"
 dynamic = ["dependencies"]
+
+[project.scripts]
+cold-chain-chat = "src.cli:main"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
