@@ -4,7 +4,7 @@ Completed on October 28, 2026. Part 2 has not started and requires user confirma
 
 ## Project location
 
-`/Users/pallavjain/Documents/Codex/cold-chain-claude-mcp`
+`/Users/pallavjain/my-git/AI Engineer/cold-chain-claude-mcp`
 
 Source: `/Users/pallavjain/my-git/AI Engineer/cold-chain-logistics-FDE-Project/`
 

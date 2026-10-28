@@ -4,7 +4,7 @@ Create a separate, independently runnable project that migrates the existing col
 
 Source project: `/Users/pallavjain/my-git/AI Engineer/cold-chain-logistics-FDE-Project/`
 
-Proposed new project name: `cold-chain-claude-mcp`. Created at `/Users/pallavjain/Documents/Codex/cold-chain-claude-mcp` on October 28, 2026.
+Proposed new project name: `cold-chain-claude-mcp`. Created at `/Users/pallavjain/my-git/AI Engineer/cold-chain-claude-mcp` on October 28, 2026.
 
 This document is a plan; unchecked items have not been completed. Preserve the original project and describe the actual development and migration timeline accurately.
 
