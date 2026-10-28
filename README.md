@@ -1,6 +1,6 @@
 # Cold-Chain Claude MCP
 
-Independent migration of a cold-chain logistics assistant. **Part 3: Claude Agent SDK and MCP orchestration are implemented. Offline checks and an authorized live workflow passed; see `docs/PART3_STATUS.md`.**
+Independent migration of a cold-chain logistics assistant. **Part 4: Claude SDK/MCP orchestration now includes parsed SQL validation, native query cancellation, and bounded tool execution. See `docs/PART4_COMPLETION.md` for verification.**
 
 The agent uses Claude Agent SDK with an in-process MCP server exposing three business tools. They call framework-independent Python services for telemetry, weather, and SOP retrieval. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
@@ -91,12 +91,22 @@ The CLI supports `/reset` and `/quit`. The UI supports New conversation. SDK ses
 
 For offline integration checks, run the unit tests. `python -m scripts.verify_sdk_runtime` checks bundled-runtime startup without a model request. The separate `python -m scripts.verify_agent --live` command makes paid Claude calls and sends retrieved evidence to Anthropic; use it only after authorizing that transfer. See `docs/PART3.md` and the Part 3 verification report for the exact verification status.
 
+## Guardrails
+
+SQL is parsed into an allowlisted T-SQL AST and regenerated before execution. Only one SELECT against the fleet view is allowed. Joins, nested queries, metadata/external sources, unknown functions, comments, and additional statements are rejected. Wildcards expand to the nine approved columns, and server/client row limits both apply. Row caps do not bound scan/sort cost: native SQL statement deadlines and query-specific cursor cancellation are separate controls.
+
+Tools have bounded caller deadlines, shared request-call budgets, bounded worker capacity, output-size limits, and bounded transient retries (one attempt by default). Timed-out non-SQL threads retain their slots until finished; this prevents an unbounded queue but does not forcibly kill native embedding work. Configured credentials are redacted from tool/event/audit output, including streamed text.
+
+Use `python -m scripts.verify_guardrails --live` for the dedicated database timeout/cancellation check. See `docs/PART4.md` for supported SQL, defaults, and precise limits.
+
+Local embedding weights must be prepared before starting the agent. If not already cached, explicitly run `hf download BAAI/bge-m3 --cache-dir data/cache/embeddings` during setup; inference requests will not download them.
+
 ## Remaining phases and limitations
 
-Part 4 adds parsed SQL validation, execution cancellation and budgets, and explicit agent tool restrictions. The current SELECT-prefix check is secondary; returned-row limits do not bound query cost. Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website.
+Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
 
 Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system, public deployment, or measured answer-quality score is claimed.
 
-See `MIGRATION_CHECKLIST.md` and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+See `MIGRATION_CHECKLIST.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
 
 To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.

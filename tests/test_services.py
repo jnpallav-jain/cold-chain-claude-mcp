@@ -60,10 +60,10 @@ class SqlServiceTests(unittest.TestCase):
         with self.engine.begin() as conn:
             conn.exec_driver_sql("ATTACH DATABASE ':memory:' AS FDE_VIEWS")
             conn.exec_driver_sql(
-                "CREATE TABLE FDE_VIEWS.VW_ACTIVE_FLEET (Current_Temperature_C FLOAT)"
+                "CREATE TABLE FDE_VIEWS.VW_ACTIVE_FLEET (Timestamp TEXT, Latitude FLOAT, Longitude FLOAT, Current_Temperature_C FLOAT, Cargo_Condition_Code FLOAT, Risk_Classification TEXT, Delay_Probability FLOAT, Port_Congestion_Level FLOAT, Route_Risk_Index FLOAT)"
             )
             conn.exec_driver_sql(
-                "INSERT INTO FDE_VIEWS.VW_ACTIVE_FLEET VALUES (2.5),(7.0),(4.0)"
+                "INSERT INTO FDE_VIEWS.VW_ACTIVE_FLEET (Current_Temperature_C) VALUES (2.5),(7.0),(4.0)"
             )
             conn.exec_driver_sql(
                 "CREATE TABLE FDE_VIEWS.AgentAuditLog (SessionID TEXT,NodeExecuted TEXT,ToolName TEXT,Content TEXT)"

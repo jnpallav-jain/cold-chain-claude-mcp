@@ -15,11 +15,20 @@ def _local_embeddings(model_name):
     try:
         target = snapshot_download(model_name, local_files_only=True)
     except LocalEntryNotFoundError:
-        target = model_name
+        try:
+            target = snapshot_download(
+                model_name,
+                local_files_only=True,
+                cache_dir=str(PROJECT_ROOT / "data/cache/embeddings"),
+            )
+        except LocalEntryNotFoundError:
+            raise ServiceError(
+                "Local embedding model is not cached. Prepare it before starting the agent."
+            ) from None
     return HuggingFaceEmbeddings(
         model_name=target,
         cache_folder=str(PROJECT_ROOT / "data/cache/embeddings"),
-        model_kwargs={"device": "cpu", "local_files_only": target != model_name},
+        model_kwargs={"device": "cpu", "local_files_only": True},
     )
 
 
@@ -33,6 +42,8 @@ def build_embeddings(settings: Settings):
         model=settings.openai_embedding_model,
         dimensions=settings.embedding_dimension,
         api_key=settings.openai_api_key.get_secret_value(),
+        max_retries=0,
+        request_timeout=min(10, settings.tool_timeout),
     )
 
 
@@ -40,7 +51,9 @@ def pinecone_client(settings):
     settings.require("pinecone_api_key")
     from pinecone import Pinecone
 
-    return Pinecone(api_key=settings.pinecone_api_key.get_secret_value())
+    return Pinecone(
+        api_key=settings.pinecone_api_key.get_secret_value(), pool_threads=1
+    )
 
 
 def describe_compatible_index(settings, client):
@@ -54,6 +67,21 @@ def describe_compatible_index(settings, client):
             "Pinecone index is not ready; retry after provisioning finishes."
         )
     return desc
+
+
+class TimedQueryIndex:
+    """Duck-typed vector-store index adapter with an explicit per-query socket deadline."""
+
+    def __init__(self, index, timeout):
+        self.index, self.timeout = index, timeout
+
+    def __getattr__(self, name):
+        return getattr(self.index, name)
+
+    def query(self, **kwargs):
+        return self.index.query(
+            **kwargs, _request_timeout=(min(3, self.timeout), self.timeout)
+        )
 
 
 @dataclass(frozen=True)
@@ -75,7 +103,10 @@ class SopService:
         client = pinecone_client(self.settings)
         desc = describe_compatible_index(self.settings, client)
         store = PineconeVectorStore(
-            index=client.Index(host=desc.host),
+            index=TimedQueryIndex(
+                client.Index(host=desc.host, pool_threads=1),
+                min(10, self.settings.tool_timeout),
+            ),
             embedding=build_embeddings(self.settings),
             namespace=self.settings.pinecone_namespace,
         )

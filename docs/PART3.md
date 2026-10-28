@@ -1,5 +1,7 @@
 # Part 3 — Claude Agent SDK and MCP integration
 
+This documents the orchestration layer. Part 4 adds SQL validation, cancellation, tool budgets, and redaction; see `PART4.md` for current guardrails.
+
 ## Implemented architecture
 
 ```mermaid

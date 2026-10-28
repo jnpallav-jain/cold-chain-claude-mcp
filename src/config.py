@@ -44,6 +44,33 @@ class Settings(BaseSettings):
     sql_row_limit: int = Field(
         default=10, ge=1, le=100, validation_alias="SQL_ROW_LIMIT"
     )
+    sql_query_timeout: int = Field(
+        default=3, ge=1, le=30, validation_alias="SQL_QUERY_TIMEOUT"
+    )
+    sql_pool_timeout: float = Field(
+        default=3, gt=0, le=30, validation_alias="SQL_POOL_TIMEOUT"
+    )
+    sql_max_chars: int = Field(
+        default=8000, ge=100, le=10000, validation_alias="SQL_MAX_CHARS"
+    )
+    tool_timeout: float = Field(
+        default=45, gt=0, le=120, validation_alias="TOOL_TIMEOUT"
+    )
+    tool_max_attempts: int = Field(
+        default=1, ge=1, le=2, validation_alias="TOOL_MAX_ATTEMPTS"
+    )
+    tool_worker_limit: int = Field(
+        default=2, ge=1, le=4, validation_alias="TOOL_WORKER_LIMIT"
+    )
+    tool_max_output_bytes: int = Field(
+        default=16384, ge=512, le=65536, validation_alias="TOOL_MAX_OUTPUT_BYTES"
+    )
+    claude_max_tool_calls: int = Field(
+        default=8, ge=1, le=20, validation_alias="CLAUDE_MAX_TOOL_CALLS"
+    )
+    claude_max_prompt_chars: int = Field(
+        default=6000, ge=100, le=20000, validation_alias="CLAUDE_MAX_PROMPT_CHARS"
+    )
     pinecone_api_key: SecretStr = Field(
         default=SecretStr(""), validation_alias="PINECONE_API_KEY", repr=False
     )

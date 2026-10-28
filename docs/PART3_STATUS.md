@@ -1,5 +1,7 @@
 # Part 3 — Completed
 
+Historical phase-completion report. Part 4 supersedes the baseline SQL limitations described here; see `PART4_COMPLETION.md`.
+
 Completed October 28, 2026. Project: `/Users/pallavjain/my-git/AI Engineer/cold-chain-claude-mcp`.
 
 ## Implemented

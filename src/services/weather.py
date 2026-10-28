@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import math
 import requests
 from src.config import Settings
-from src.services.errors import ServiceError
+from src.services.errors import ServiceError, TransientServiceError
 
 
 @dataclass(frozen=True)
@@ -64,6 +64,17 @@ class WeatherService:
                 8.5 if wind > 10 else 2.5,
                 "High Transit Disruption" if wind > 10 else "Corridor Normal",
             )
+        except (requests.Timeout, requests.ConnectionError):
+            raise TransientServiceError(
+                "Weather service temporarily unavailable."
+            ) from None
+        except requests.HTTPError as error:
+            status = error.response.status_code if error.response is not None else 0
+            if status == 429 or status >= 500:
+                raise TransientServiceError(
+                    "Weather service temporarily unavailable."
+                ) from None
+            raise ServiceError("Weather request rejected.") from None
         except Exception:
             raise ServiceError(
                 "Weather service unavailable or returned invalid readings."

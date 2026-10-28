@@ -25,6 +25,8 @@ from src.agent_tools import MCP_TOOL_NAMES, SERVER_NAME, create_business_mcp_ser
 from src.config import PROJECT_ROOT, Settings, get_settings
 from src.services.container import Services, get_services
 from src.services.audit import AuditEvent
+from src.security.execution import RequestBudget, get_workers
+from src.security.redaction import Redactor, StreamingRedactor
 
 logger = logging.getLogger(__name__)
 PROMPT_PATH = PROJECT_ROOT / "src/prompts/system_prompt.txt"
@@ -95,7 +97,15 @@ def build_agent_options(settings: Settings, services: Services, session: AgentSe
             "Task",
             "Skill",
         ],
-        mcp_servers={SERVER_NAME: create_business_mcp_server(services)},
+        mcp_servers={
+            SERVER_NAME: create_business_mcp_server(
+                services,
+                settings=settings,
+                budget=RequestBudget(
+                    settings.claude_request_timeout, settings.claude_max_tool_calls
+                ),
+            )
+        },
         strict_mcp_config=True,
         setting_sources=[],
         skills=[],
@@ -135,19 +145,23 @@ class AgentRunner:
         self.settings = settings if settings is not None else get_settings()
         self.services = services if services is not None else get_services()
         self.client_factory = client_factory
+        self.redactor = Redactor(self.settings)
 
     async def _audit(self, session: AgentSession, event: AgentEvent):
         if event.kind not in {"tool_start", "tool_result", "complete", "error"}:
             return True
         try:
-            await asyncio.to_thread(
-                self.services.audit.write,
-                AuditEvent(
-                    session.id,
-                    event.kind,
-                    str(event.data.get("name", "claude"))[:100],
-                    json.dumps(event.data, ensure_ascii=False, default=str),
+            record = AuditEvent(
+                session.id,
+                event.kind,
+                str(event.data.get("name", "claude"))[:100],
+                json.dumps(
+                    self.redactor.data(event.data), ensure_ascii=False, default=str
                 ),
+            )
+            await get_workers(1, "audit").run(
+                lambda: self.services.audit.write(record),
+                seconds=min(5, self.settings.tool_timeout),
             )
             return True
         except Exception:
@@ -160,6 +174,11 @@ class AgentRunner:
         if not prompt.strip():
             yield AgentEvent("error", {"message": "Enter a question."})
             return
+        if len(prompt) > self.settings.claude_max_prompt_chars:
+            yield AgentEvent(
+                "error", {"message": "Question exceeds the configured size limit."}
+            )
+            return
         if not session._lock.acquire(blocking=False):
             yield AgentEvent(
                 "error", {"message": "This conversation already has a running request."}
@@ -171,9 +190,10 @@ class AgentRunner:
             options = build_agent_options(self.settings, self.services, session)
             tool_names = {}
             assistant_text = []
+            stream_redactor = StreamingRedactor(self.redactor)
             async with asyncio.timeout(self.settings.claude_request_timeout):
                 async with self.client_factory(options=options) as client:
-                    await client.query(prompt)
+                    await client.query(self.redactor.text(prompt))
                     async for message in client.receive_response():
                         events = []
                         if (
@@ -199,7 +219,11 @@ class AgentRunner:
                                 events.append(
                                     AgentEvent(
                                         "text_delta",
-                                        {"text": event["delta"].get("text", "")},
+                                        {
+                                            "text": stream_redactor.feed(
+                                                event["delta"].get("text", "")
+                                            )
+                                        },
                                     )
                                 )
                         elif isinstance(message, AssistantMessage):
@@ -282,7 +306,14 @@ class AgentRunner:
                                         },
                                     )
                                 )
+                        if isinstance(message, ResultMessage):
+                            tail = stream_redactor.flush()
+                            if tail:
+                                yield AgentEvent("text_delta", {"text": tail})
                         for event in events:
+                            event = AgentEvent(
+                                event.kind, self.redactor.data(event.data)
+                            )
                             if not await self._audit(session, event):
                                 yield AgentEvent(
                                     "audit_warning",

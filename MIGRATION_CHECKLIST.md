@@ -56,20 +56,20 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 4. Enforce security and execution limits
 
-- [ ] Recreate the semantic view and restricted agent account in the isolated database.
-- [ ] Create the audit table and explicitly configure its insert/read/update/delete permissions.
-- [ ] Verify allowed reads and inserts, and denied operations, using the restricted login.
-- [ ] Replace the SELECT-prefix-only check with parsed statement validation and approved-object checks.
-- [ ] Reject multiple statements and unsupported SQL constructs.
-- [ ] Configure and verify database query timeout and cancellation behavior.
-- [ ] Limit tool output size and returned rows; document that row limits do not bound query cost.
-- [ ] Add tool timeouts, bounded retries, agent turn limits, and per-request budgets.
-- [ ] Explicitly disable unnecessary built-in tools, including shell and filesystem access.
-- [ ] Verify permission policy behavior instead of treating `allowed_tools` as a complete tool restriction.
-- [ ] Treat retrieved text and tool results as data, not authority to change permissions or instructions.
-- [ ] Redact secrets and sensitive connection details from user-visible errors and logs.
+- [x] Recreate the semantic view and restricted agent account in the isolated database.
+- [x] Create the audit table and explicitly configure its insert/read/update/delete permissions.
+- [x] Verify allowed reads and inserts, and denied operations, using the restricted login.
+- [x] Replace the SELECT-prefix-only check with parsed statement validation and approved-object checks.
+- [x] Reject multiple statements and unsupported SQL constructs.
+- [x] Configure and verify database query timeout and cancellation behavior.
+- [x] Limit tool output size and returned rows; document that row limits do not bound query cost.
+- [x] Add tool timeouts, bounded retries, agent turn limits, and per-request budgets.
+- [x] Explicitly disable unnecessary built-in tools, including shell and filesystem access.
+- [x] Verify permission policy behavior instead of treating `allowed_tools` as a complete tool restriction.
+- [x] Treat retrieved text and tool results as data, not authority to change permissions or instructions.
+- [x] Redact secrets and sensitive connection details from user-visible errors and logs.
 
-**Completion:** Repeatable checks show that forbidden operations are blocked and execution is bounded.
+**Completion:** Verified with 50 offline tests, live database permissions and native cancellation, and a successful Claude workflow. SQL cancellation and bounded-wait/non-SQL worker limitations are documented in the Part 4 completion report. Part 5 awaits user confirmation.
 
 ## 5. Add backend observability and human approval
 

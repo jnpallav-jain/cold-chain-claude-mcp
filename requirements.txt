@@ -20,3 +20,4 @@ streamlit==1.62.0
 torch==2.13.0
 requests==2.34.2
 huggingface-hub==1.33.0
+sqlglot==30.25.0
