@@ -1,47 +1,90 @@
 # Cold-Chain Claude MCP
 
-Independent migration workspace for a cold-chain logistics assistant. **Status: Part 1 baseline; Claude Agent SDK and MCP are planned, not implemented.**
+Independent migration of a cold-chain logistics assistant. **Part 2: reusable services and isolated resources are implemented. Claude Agent SDK and MCP orchestration are planned for Part 3.**
 
-The baseline uses LangGraph to choose between SQL fleet queries, current weather lookup, and SOP retrieval through BGE-M3 + Pinecone. Subsequent phases replace orchestration, isolate services, enforce limits, add approval controls and repeatable evaluations, and deploy a demo.
+The retained agent uses LangGraph. Its tools now call framework-independent Python services for telemetry, weather, and SOP retrieval. Audit persistence is also a backend service. Service imports make no model or network calls.
 
-## Local installation
+## Install and configure
 
-Requires Python 3.12 or newer. From this directory:
+Requires Python 3.12+, Docker for the local SQL Server, and ODBC Driver 18 for SQL Server on the host.
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .
+python -m pip install -r requirements.lock.txt
+python -m pip install -e . --no-deps
 python -m pip check
-cp .env.example .env
 ```
 
-For the dependency versions verified on macOS arm64/Python 3.12, install `requirements.lock.txt` first and then use `python -m pip install -e . --no-deps`. The original source pins are preserved separately in `requirements.source.txt`.
+Copy `.env.example` to `.env` only when no local `.env` exists; supply credentials locally. The current development instance already has an ignored `.env`. Never overwrite its generated SQL passwords or commit it. `.env.example` documents all supported settings.
 
-Fill credentials in `.env` locally only. Future Claude settings are placeholders; the current baseline still uses `Agent_llm`. No credentials or downloaded embedding weights are bundled. The ODBC Driver 18 for SQL Server is an additional native prerequisite for a live SQL connection.
+`src/config.py` resolves relative data paths from the project root. It accepts the inherited `Agent_llm`, `Embeddings_model`, and `Local_Embedding_Model` names as aliases. New configuration should use the uppercase names in the example.
 
-This is a source-backed editable installation: run from the repository directory, which contains configuration and data files.
+## Isolated development resources
 
-## Phase boundary
+| Resource | Target |
+|---|---|
+| Docker Compose project | `cold-chain-claude-mcp` |
+| SQL container | `cold-chain-claude-mcp-sqlserver-1` |
+| Host address | `127.0.0.1:1434` |
+| Docker data volume | `cold-chain-claude-mcp_sqlserver-data` |
+| Application database | `cold_chain_claude_mcp` |
+| Restricted login | `USR_CC_CLAUDE_RO` |
+| Pinecone index | `cold-chain-claude-mcp-sop-local` |
+| SOP namespace | `sop-v1` |
 
-Do not run ingestion or the live UI yet. The inherited Pinecone names are hardcoded and its ingestion script can delete an index. Part 2 must configure a separate index and database container first. The example reserves SQL port 1434 and a new Pinecone index name, but the index variable is not wired into the baseline yet. No Docker, SQL, Pinecone, or paid model operations are executed by installation.
+The SQL image uses amd64 emulation on Apple silicon. Its Developer edition is for development, not production licensing. Application engines use the dedicated database; an admin connection uses `master` only to create the database and login. Original database/index names are rejected by configuration.
 
-After the resource isolation and orchestration phases are complete, the intended UI entry point is `streamlit run src/ui.py`.
+Provisioning is explicit:
 
-## Files
+```bash
+docker compose up -d --no-recreate sqlserver
+python -m scripts.bootstrap_resources                 # display plan; no mutations
+python -m scripts.bootstrap_resources --apply --component sql
+python -m scripts.bootstrap_resources --apply --component pinecone
+```
 
-- `src/`: inherited tools, graph, UI, and prompt.
-- `scripts/`: inherited ingestion and SQL view setup. SQL login creation now requires a securely supplied SQLCMD variable named `SQL_AGENT_PASSWORD`; do not place a real password in source.
-- `data/sample/`: four fabricated fleet records, selected by default by the CSV loader.
-- `data/policy/`: inherited SOP, retained for local development.
-- `docs/BASELINE.md`: scope, provenance, and inherited limitations.
-- `docs/VERIFICATION.md`: installation and source-copy validation results.
-- `MIGRATION_CHECKLIST.md`: phased work and completion criteria.
-- `ATTRIBUTION.md`: upstream credit and publication limitations.
+SQL bootstrap loads the four synthetic rows only if the raw table is absent, then applies the view and audit permissions. Re-running bootstrap preserves existing records. SQL passwords are read locally, never embedded in the SQL file. The Pinecone bootstrap validates dimension and metric and never deletes an incompatible index; it creates new indexes with deletion protection enabled.
 
-## Data and claims
+After authorizing the policy text's transfer to Pinecone, ingestion is:
 
-The external Kaggle CSV and original hash cache were not copied. Synthetic fleet records are historical demonstration data; current weather must not be presented as evidence of historical causation. Database permission checks, SDK integration, evaluations, and deployment must be independently verified in this copy before being claimed. No six-month SDK experience or production rollout is implied.
+```bash
+python -m scripts.ingest_sop_pinecone
+```
 
-See [attribution and publication status](ATTRIBUTION.md) before distributing inherited material.
+The cache is scoped to index host, namespace, embedding settings, and splitter settings. Changed files upload versioned chunks before removing their previous tracked IDs. Failed uploads do not mark the changed file complete. Deletions only target tracked IDs in the configured namespace. No index recreation or broad namespace deletion is performed.
+
+`python -m scripts.ingest_legacy_data` refuses to replace an existing telemetry table unless `--replace` is supplied. Its default input is the fabricated sample in `data/sample/`.
+
+## Verify services independently
+
+```bash
+python -m unittest discover -s tests -v
+python -m scripts.verify_services --live --skip-sop
+# After authorized SOP ingestion:
+python -m scripts.verify_services --live
+```
+
+The offline suite uses fixture data and injected dependencies. The live command contacts the dedicated SQL instance and weather service, writes a labeled audit event, checks permissions, and optionally retrieves SOP passages. It never invokes the agent or a chat model. Live results assume the four synthetic rows remain unchanged.
+
+## Service boundaries
+
+- `src/services/telemetry.py`: SQL view queries and bounded returned rows.
+- `src/services/weather.py`: timestamped weather plus a clearly labeled wind-based demonstration heuristic.
+- `src/services/sop.py`: lazy dense embedding model and Pinecone retrieval, preserving source metadata.
+- `src/services/audit.py`: parameterized audit persistence and admin-only inspection interface.
+- `src/services/documents.py`, `ingestion.py`, `loader.py`: document parsing and isolated ingestion.
+- `src/agent_tools.py`: temporary LangChain adapters; Part 3 replaces these with MCP adapters.
+- `src/ui.py`: retained Streamlit UI, now using backend audit persistence and centralized database settings.
+
+The UI still emits audit events; full SDK-level lifecycle tracing belongs to Part 5. The retained graph requires its configured legacy model credentials and still has the original UI/system-prompt gap. Do not interpret service verification as an end-to-end agent evaluation. The intended UI entry point remains `streamlit run src/ui.py` after orchestration migration.
+
+## Remaining phases and limitations
+
+Part 3 migrates to Claude Agent SDK and in-process MCP. Part 4 adds parsed SQL validation, execution cancellation and budgets, and explicit agent tool restrictions. The current SELECT-prefix check is secondary; returned-row limits do not bound query cost. Part 5 adds approval controls and fuller observability; Part 6 adds agent evaluations; Part 7 deploys the website.
+
+Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. No Claude runtime, multi-agent system, public deployment, or measured answer-quality score is claimed yet.
+
+See `MIGRATION_CHECKLIST.md`, `docs/PART2.md`, and `docs/BASELINE.md` for status. `docs/VERIFICATION.md` records the historical Part 1 checks. Read `ATTRIBUTION.md` before distributing inherited code or SOP content; uploading to a private index does not establish public redistribution rights.
+
+To stop the local SQL instance without deleting data, use `docker compose stop sqlserver`.

@@ -24,17 +24,17 @@ This document is a plan; unchecked items have not been completed. Preserve the o
 
 ## 2. Extract reusable business services
 
-- [ ] Extract telemetry querying from LangChain tool decorators into a Python service.
-- [ ] Extract weather lookup into a Python service.
-- [ ] Extract SOP retrieval using local BGE-M3 dense embeddings and Pinecone.
-- [ ] Extract audit persistence from the Streamlit UI into a backend service.
-- [ ] Centralize configuration and validate required settings at startup.
-- [ ] Retain SQL Server initially to isolate orchestration changes.
-- [ ] Provision an independent database or container and separate Pinecone index.
-- [ ] Ensure ingestion and index recreation cannot overwrite the original project's resources.
-- [ ] Exercise service success and failure paths without starting an agent.
+- [x] Extract telemetry querying from LangChain tool decorators into a Python service.
+- [x] Extract weather lookup into a Python service.
+- [x] Extract SOP retrieval using local BGE-M3 dense embeddings and Pinecone.
+- [x] Extract audit persistence from the Streamlit UI into a backend service.
+- [x] Centralize configuration and validate required settings at startup.
+- [x] Retain SQL Server initially to isolate orchestration changes.
+- [x] Provision an independent database or container and separate Pinecone index.
+- [x] Ensure ingestion and index recreation cannot overwrite the original project's resources.
+- [x] Exercise service success and failure paths without starting an agent.
 
-**Completion:** All business services work independently of the agent framework against isolated resources.
+**Completion:** Verified offline and against isolated live SQL, weather, and Pinecone resources. See the Part 2 completion report. Part 3 awaits user confirmation.
 
 ## 3. Implement Claude Agent SDK and MCP tools
 
@@ -136,7 +136,7 @@ Suggested resume wording after completion:
 
 ## Milestones and scope
 
-- [ ] **Milestone A:** Independent project copy and isolated resources.
+- [x] **Milestone A:** Independent project copy and isolated resources.
 - [ ] **Milestone B:** Local Claude Agent SDK + MCP workflow.
 - [ ] **Milestone C:** Verified permissions, approval workflow, and evaluation report.
 - [ ] **Milestone D:** Deployed demo and portfolio materials.

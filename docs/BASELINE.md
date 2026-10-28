@@ -1,4 +1,6 @@
-# Migration baseline
+# Historical Part 1 migration baseline
+
+This file records the initial copy. Part 2 changes supersede the resource and import-time limitations described below; see `PART2.md` for current behavior.
 
 The initial copy contains the current working-tree versions of the original Python sources, including the uncommitted IPython import and whitespace changes in `src/orchestrator.py`. `baseline-manifest.json` records source commit, working-tree status, and file fingerprints. Existing Git history was not copied.
 

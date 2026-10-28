@@ -23,3 +23,5 @@ streamlit==1.62.0
 torch==2.13.0
 IPython>=8,<10
 langchain-text-splitters>=0.3,<2
+requests==2.34.2
+huggingface-hub==1.33.0

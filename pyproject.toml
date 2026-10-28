@@ -13,7 +13,7 @@ dynamic = ["dependencies"]
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
-include = ["src", "src.*"]
+include = ["src", "src.*", "scripts"]
 
 [tool.setuptools.package-data]
 src = ["prompts/*.txt"]

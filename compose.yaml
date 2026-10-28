@@ -1,0 +1,16 @@
+name: cold-chain-claude-mcp
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SQL_ADMIN_PASSWORD:?Set SQL_ADMIN_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${SQL_SERVER_PORT:-1434}:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    restart: unless-stopped
+volumes:
+  sqlserver-data:
