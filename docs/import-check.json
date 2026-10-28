@@ -1,0 +1,54 @@
+[
+  {
+    "module": "src",
+    "status": "pass"
+  },
+  {
+    "module": "streamlit",
+    "status": "pass"
+  },
+  {
+    "module": "IPython.display",
+    "status": "pass"
+  },
+  {
+    "module": "langgraph.graph",
+    "status": "pass"
+  },
+  {
+    "module": "langgraph.prebuilt",
+    "status": "pass"
+  },
+  {
+    "module": "langchain_openai",
+    "status": "pass"
+  },
+  {
+    "module": "langchain_huggingface",
+    "status": "pass"
+  },
+  {
+    "module": "langchain_pinecone",
+    "status": "pass"
+  },
+  {
+    "module": "langchain_text_splitters",
+    "status": "pass"
+  },
+  {
+    "module": "sqlalchemy",
+    "status": "pass"
+  },
+  {
+    "module": "pyodbc",
+    "status": "pass"
+  },
+  {
+    "module": "pandas",
+    "status": "pass"
+  },
+  {
+    "module": "pypdf",
+    "status": "pass"
+  }
+]
