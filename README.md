@@ -8,37 +8,9 @@ The agent uses Claude Agent SDK with an in-process MCP server exposing three evi
 
 ## Architecture and request flow
 
-```mermaid
-flowchart TD
-    Viewer["Reviewer: Streamlit website"] --> Gate["Viewer login and persistent admission limits"]
-    Gate --> Runner["Local Claude SDK runner and system prompt"]
-    CLI["Owner CLI"] --> Runner
-    Runner <--> Claude["Anthropic Claude API"]
-    Runner <--> MCP["In-process SDK MCP server: coldchain"]
-    MCP --> SQLTool["query_telemetry_db"]
-    MCP --> WeatherTool["fetch_corridor_conditions"]
-    MCP --> SOPTool["search_compliance_sop"]
-    MCP --> Proposal["propose_incident_escalation"]
-    SQLTool --> Policy["T-SQL AST allowlist and query deadline"]
-    Policy --> View["SQL Server: approved fleet view"]
-    Raw["Synthetic CSV: bootstrap only"] --> Table["SQL Server: raw telemetry table"]
-    Table --> View
-    WeatherTool --> Weather["Open-Meteo: timestamped current weather"]
-    SOPTool --> Dense["Local BGE-M3 dense embeddings"]
-    Dense --> Pinecone["Pinecone: SOP passages and source metadata"]
-    Proposal --> Ledger["SQLite: pending proposals and decision ledger"]
-    Operator["Separate authenticated human operator"] --> Review["Review exact proposal: approve or reject"]
-    Review --> Ledger
-    Ledger --> Incident["Approved only: atomic simulated incident creation"]
-    Runner --> Trace["Backend events and SDK hooks"]
-    Trace --> Audit["SQL Server: insert-only agent audit access"]
-    Runner --> Evidence["Streamed answer, citations, evidence, and trace panels"]
-    Evidence --> Viewer
-    Gate --> Admission["SQLite: session tokens, rate limits, daily reservations"]
-    SOP["Authorized SOP files"] --> Split["Header-aware chunks: 600 characters, 60 overlap"]
-    Split --> Ingest["Versioned ingestion and target-scoped hash cache"]
-    Ingest --> Dense
-```
+![Cold-chain architecture: Claude Agent SDK, four MCP tools, data sources, and human approval](docs/assets/architecture.png)
+
+[View full-size diagram](docs/assets/architecture.png) · [Editable SVG](docs/assets/architecture.svg)
 
 The SDK owns the model/tool loop: Claude requests an MCP tool, the application executes its validated service operation, and the SDK returns the result to Claude for the next turn. The MCP server runs inside the Python application; it is not a separate public endpoint. The website and CLI share the runner and prompt; website admission limits apply to the website entry point.
 

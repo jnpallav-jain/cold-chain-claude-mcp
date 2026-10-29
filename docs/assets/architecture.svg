@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1990" viewBox="0 0 2400 1990">
+<title>Cold-Chain Claude MCP architecture</title>
+<desc>Authenticated Streamlit requests run through the Claude Agent SDK and an in-process MCP server with four tools. Telemetry uses SQL Server, weather uses Open-Meteo, SOP retrieval uses BGE-M3 and Pinecone, and incident proposals require separate human approval. Backend events are audited.</desc>
+<rect width="2400" height="1990" fill="#f7f9fc"/>
+<text x="100" y="84.17" fill="#167e83" font-family="Arial, sans-serif" font-size="23" font-weight="700">COLD-CHAIN  /  CLAUDE MCP</text>
+<text x="100" y="156.24" fill="#17263e" font-family="Arial, sans-serif" font-size="56" font-weight="700">Evidence to action, with human control</text>
+<text x="100" y="208.12" fill="#5a6a80" font-family="Arial, sans-serif" font-size="28" font-weight="400">Claude Agent SDK  ·  Four MCP tools  ·  Dense SOP retrieval  ·  Local Docker application</text>
+<text x="100" y="272.17" fill="#5a6a80" font-family="Arial, sans-serif" font-size="23" font-weight="700">01   REQUEST &amp; REASONING</text>
+<rect x="100" y="300" width="420" height="150" rx="22" fill="#e4f7f5" stroke="#087f83" stroke-width="2"/>
+<rect x="118" y="322" width="6" height="106" rx="3" fill="#087f83"/>
+<text x="142" y="351.28" fill="#087f83" font-family="Arial, sans-serif" font-size="32" font-weight="700">Streamlit workspace</text>
+<text x="142" y="396.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Authenticated reviewer</text>
+<text x="142" y="432.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Chat, evidence &amp; citations</text>
+<rect x="580" y="300" width="470" height="150" rx="22" fill="#e4f7f5" stroke="#087f83" stroke-width="2"/>
+<rect x="598" y="322" width="6" height="106" rx="3" fill="#087f83"/>
+<text x="622" y="351.28" fill="#087f83" font-family="Arial, sans-serif" font-size="32" font-weight="700">Admission controls</text>
+<text x="622" y="396.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Sessions, rate &amp; concurrency</text>
+<text x="622" y="432.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Persistent daily reservations</text>
+<rect x="1110" y="300" width="530" height="150" rx="22" fill="#eaf0ff" stroke="#3455b5" stroke-width="2"/>
+<rect x="1128" y="322" width="6" height="106" rx="3" fill="#3455b5"/>
+<text x="1152" y="351.28" fill="#3455b5" font-family="Arial, sans-serif" font-size="32" font-weight="700">Claude Agent SDK</text>
+<text x="1152" y="396.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Shared runner + system prompt</text>
+<text x="1152" y="432.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Tool loop, streaming &amp; sessions</text>
+<rect x="1760" y="300" width="540" height="150" rx="22" fill="#f0eafb" stroke="#7043b3" stroke-width="2"/>
+<rect x="1778" y="322" width="6" height="106" rx="3" fill="#7043b3"/>
+<text x="1802" y="351.28" fill="#7043b3" font-family="Arial, sans-serif" font-size="32" font-weight="700">Anthropic Claude API</text>
+<text x="1802" y="396.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Model reasoning</text>
+<text x="1802" y="432.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Requests tools; reads results</text>
+<polyline points="520,375 580,375" fill="none" stroke="#8593a8" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="580,375 567.7138441335347,381.71195754045885 567.7138441335347,368.28804245954115" fill="#8593a8"/>
+<polyline points="1050,375 1110,375" fill="none" stroke="#8593a8" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1110,375 1097.7138441335348,381.71195754045885 1097.7138441335348,368.28804245954115" fill="#8593a8"/>
+<polyline points="1640,375 1760,375" fill="none" stroke="#8593a8" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1760,375 1747.7138441335348,381.71195754045885 1747.7138441335348,368.28804245954115" fill="#8593a8"/>
+<polygon points="1640,375 1652.2861558664652,368.28804245954115 1652.2861558664652,381.71195754045885" fill="#8593a8"/>
+<text x="1110" y="271.38" fill="#5a6a80" font-family="Arial, sans-serif" font-size="22" font-weight="400">Owner CLI also uses the shared SDK runner.</text>
+<rect x="100" y="555" width="2200" height="125" rx="22" fill="#263b66"/>
+<text x="150" y="596.17" fill="#b9c9eb" font-family="Arial, sans-serif" font-size="23" font-weight="700">IN-PROCESS MCP SERVER</text>
+<text x="150" y="645.86" fill="#ffffff" font-family="Arial, sans-serif" font-size="34" font-weight="700">coldchain</text>
+<text x="700" y="609.28" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" font-weight="700">Four schema-validated business tools</text>
+<text x="700" y="651.54" fill="#d5e0f5" font-family="Arial, sans-serif" font-size="26" font-weight="400">SDK dispatches tool calls and returns structured evidence to Claude.</text>
+<polyline points="1375,450 1375,555" fill="none" stroke="#3455b5" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1375,555 1368.2880424595412,542.7138441335347 1381.7119575404588,542.7138441335347" fill="#3455b5"/>
+<polygon points="1375,450 1381.7119575404588,462.2861558664652 1368.2880424595412,462.2861558664652" fill="#3455b5"/>
+<polyline points="355,680 355,755" fill="none" stroke="#245fbc" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="355,755 348.28804245954115,742.7138441335347 361.71195754045885,742.7138441335347" fill="#245fbc"/>
+<polyline points="915,680 915,755" fill="none" stroke="#a66a09" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="915,755 908.2880424595412,742.7138441335347 921.7119575404588,742.7138441335347" fill="#a66a09"/>
+<polyline points="1475,680 1475,755" fill="none" stroke="#7844b6" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1475,755 1468.2880424595412,742.7138441335347 1481.7119575404588,742.7138441335347" fill="#7844b6"/>
+<polyline points="2035,680 2035,755" fill="none" stroke="#bd4f42" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="2035,755 2028.2880424595412,742.7138441335347 2041.7119575404588,742.7138441335347" fill="#bd4f42"/>
+<rect x="100" y="755" width="510" height="170" rx="22" fill="#eaf2ff" stroke="#245fbc" stroke-width="2"/>
+<rect x="118" y="777" width="6" height="126" rx="3" fill="#245fbc"/>
+<text x="142" y="806.28" fill="#245fbc" font-family="Arial, sans-serif" font-size="32" font-weight="700">Telemetry query</text>
+<text x="142" y="847.59" fill="#245fbc" font-family="monospace" font-size="21" font-weight="400">query_telemetry_db</text>
+<text x="142" y="890.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Validated historical fleet SQL</text>
+<rect x="660" y="755" width="510" height="170" rx="22" fill="#fff5df" stroke="#a66a09" stroke-width="2"/>
+<rect x="678" y="777" width="6" height="126" rx="3" fill="#a66a09"/>
+<text x="702" y="806.28" fill="#a66a09" font-family="Arial, sans-serif" font-size="32" font-weight="700">Corridor conditions</text>
+<text x="702" y="847.59" fill="#a66a09" font-family="monospace" font-size="21" font-weight="400">fetch_corridor_conditions</text>
+<text x="702" y="890.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Timestamped weather lookup</text>
+<rect x="1220" y="755" width="510" height="170" rx="22" fill="#f2ebfc" stroke="#7844b6" stroke-width="2"/>
+<rect x="1238" y="777" width="6" height="126" rx="3" fill="#7844b6"/>
+<text x="1262" y="806.28" fill="#7844b6" font-family="Arial, sans-serif" font-size="32" font-weight="700">SOP retrieval</text>
+<text x="1262" y="847.59" fill="#7844b6" font-family="monospace" font-size="21" font-weight="400">search_compliance_sop</text>
+<text x="1262" y="890.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Policy passages with citations</text>
+<rect x="1780" y="755" width="510" height="170" rx="22" fill="#fff0eb" stroke="#bd4f42" stroke-width="2"/>
+<rect x="1798" y="777" width="6" height="126" rx="3" fill="#bd4f42"/>
+<text x="1822" y="806.28" fill="#bd4f42" font-family="Arial, sans-serif" font-size="32" font-weight="700">Incident proposal</text>
+<text x="1822" y="847.59" fill="#bd4f42" font-family="monospace" font-size="21" font-weight="400">propose_incident_escalation</text>
+<text x="1822" y="890.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Stores a proposal for review</text>
+<polyline points="355,925 355,985" fill="none" stroke="#245fbc" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="355,985 348.28804245954115,972.7138441335347 361.71195754045885,972.7138441335347" fill="#245fbc"/>
+<polyline points="915,925 915,985" fill="none" stroke="#a66a09" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="915,985 908.2880424595412,972.7138441335347 921.7119575404588,972.7138441335347" fill="#a66a09"/>
+<polyline points="1475,925 1475,985" fill="none" stroke="#7844b6" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1475,985 1468.2880424595412,972.7138441335347 1481.7119575404588,972.7138441335347" fill="#7844b6"/>
+<polyline points="2035,925 2035,985" fill="none" stroke="#bd4f42" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="2035,985 2028.2880424595412,972.7138441335347 2041.7119575404588,972.7138441335347" fill="#bd4f42"/>
+<rect x="100" y="985" width="510" height="170" rx="22" fill="#eaf2ff" stroke="#245fbc" stroke-width="2"/>
+<rect x="118" y="1007" width="6" height="126" rx="3" fill="#245fbc"/>
+<text x="142" y="1036.28" fill="#245fbc" font-family="Arial, sans-serif" font-size="32" font-weight="700">SQL policy &amp; permissions</text>
+<text x="142" y="1081.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">One SELECT on approved view</text>
+<text x="142" y="1117.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">AST allowlist + query deadline</text>
+<rect x="660" y="985" width="510" height="170" rx="22" fill="#fff5df" stroke="#a66a09" stroke-width="2"/>
+<rect x="678" y="1007" width="6" height="126" rx="3" fill="#a66a09"/>
+<text x="702" y="1036.28" fill="#a66a09" font-family="Arial, sans-serif" font-size="32" font-weight="700">Open-Meteo API</text>
+<text x="702" y="1081.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Current weather + observation time</text>
+<text x="702" y="1117.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Wind-based demo heuristic</text>
+<rect x="1220" y="985" width="510" height="170" rx="22" fill="#f2ebfc" stroke="#7844b6" stroke-width="2"/>
+<rect x="1238" y="1007" width="6" height="126" rx="3" fill="#7844b6"/>
+<text x="1262" y="1036.28" fill="#7844b6" font-family="Arial, sans-serif" font-size="32" font-weight="700">Local BGE-M3</text>
+<text x="1262" y="1081.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">CPU dense embeddings</text>
+<text x="1262" y="1117.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">1,024 dimensions</text>
+<rect x="1780" y="985" width="510" height="170" rx="22" fill="#fff0eb" stroke="#bd4f42" stroke-width="2"/>
+<rect x="1798" y="1007" width="6" height="126" rx="3" fill="#bd4f42"/>
+<text x="1822" y="1036.28" fill="#bd4f42" font-family="Arial, sans-serif" font-size="32" font-weight="700">Pending proposal ledger</text>
+<text x="1822" y="1081.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">SQLite, bound to exact session</text>
+<text x="1822" y="1117.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">No incident execution yet</text>
+<polyline points="355,1155 355,1215" fill="none" stroke="#245fbc" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="355,1215 348.28804245954115,1202.7138441335348 361.71195754045885,1202.7138441335348" fill="#245fbc"/>
+<polyline points="915,1155 915,1215" fill="none" stroke="#a66a09" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="915,1215 908.2880424595412,1202.7138441335348 921.7119575404588,1202.7138441335348" fill="#a66a09"/>
+<polyline points="1475,1155 1475,1215" fill="none" stroke="#7844b6" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1475,1215 1468.2880424595412,1202.7138441335348 1481.7119575404588,1202.7138441335348" fill="#7844b6"/>
+<polyline points="2035,1155 2035,1215" fill="none" stroke="#bd4f42" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="2035,1215 2028.2880424595412,1202.7138441335348 2041.7119575404588,1202.7138441335348" fill="#bd4f42"/>
+<rect x="100" y="1215" width="510" height="170" rx="22" fill="#eaf2ff" stroke="#245fbc" stroke-width="2"/>
+<rect x="118" y="1237" width="6" height="126" rx="3" fill="#245fbc"/>
+<text x="142" y="1266.28" fill="#245fbc" font-family="Arial, sans-serif" font-size="32" font-weight="700">SQL Server 2022</text>
+<text x="142" y="1311.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Readable fleet view</text>
+<text x="142" y="1347.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Synthetic data; raw reads denied</text>
+<rect x="660" y="1215" width="510" height="170" rx="22" fill="#fff5df" stroke="#a66a09" stroke-width="2"/>
+<rect x="678" y="1237" width="6" height="126" rx="3" fill="#a66a09"/>
+<text x="702" y="1266.28" fill="#a66a09" font-family="Arial, sans-serif" font-size="32" font-weight="700">Weather evidence</text>
+<text x="702" y="1311.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Not measured traffic congestion</text>
+<text x="702" y="1347.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Not historical causal evidence</text>
+<rect x="1220" y="1215" width="510" height="170" rx="22" fill="#f2ebfc" stroke="#7844b6" stroke-width="2"/>
+<rect x="1238" y="1237" width="6" height="126" rx="3" fill="#7844b6"/>
+<text x="1262" y="1266.28" fill="#7844b6" font-family="Arial, sans-serif" font-size="32" font-weight="700">Pinecone vector index</text>
+<text x="1262" y="1311.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Cosine search · top 2 passages</text>
+<text x="1262" y="1347.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">SOP filename + section metadata</text>
+<rect x="1780" y="1215" width="510" height="170" rx="22" fill="#fff0eb" stroke="#bd4f42" stroke-width="2"/>
+<rect x="1798" y="1237" width="6" height="126" rx="3" fill="#bd4f42"/>
+<text x="1822" y="1266.28" fill="#bd4f42" font-family="Arial, sans-serif" font-size="32" font-weight="700">Human approval</text>
+<text x="1822" y="1311.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Separate operator authentication</text>
+<text x="1822" y="1347.54" fill="#17263e" font-family="Arial, sans-serif" font-size="26" font-weight="400">Approve or reject exact proposal</text>
+<polyline points="2035,1385 2035,1435" fill="none" stroke="#bd4f42" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="2035,1435 2028.2880424595412,1422.7138441335348 2041.7119575404588,1422.7138441335348" fill="#bd4f42"/>
+<rect x="1780" y="1435" width="510" height="100" rx="22" fill="#dff4e9" stroke="#23885e" stroke-width="2"/>
+<text x="1821.515625" y="1472.75" fill="#19714b" font-family="Arial, sans-serif" font-size="25" font-weight="700">APPROVED: SIMULATED INCIDENT</text>
+<text x="1854.0" y="1512.96" fill="#19714b" font-family="Arial, sans-serif" font-size="24" font-weight="400">Atomic create · duplicates blocked</text>
+<text x="100" y="1456.33" fill="#17263e" font-family="Arial, sans-serif" font-size="27" font-weight="700">Tool results return through MCP to the SDK.</text>
+<text x="100" y="1497.75" fill="#5a6a80" font-family="Arial, sans-serif" font-size="25" font-weight="400">The model can propose an action. Only the authenticated human path can approve it.</text>
+<text x="100" y="1598.17" fill="#5a6a80" font-family="Arial, sans-serif" font-size="23" font-weight="700">02   BACKEND OBSERVABILITY</text>
+<rect x="100" y="1625" width="2200" height="125" rx="22" fill="#e9eef5" stroke="#bdc9da" stroke-width="2"/>
+<text x="140" y="1672.91" fill="#354b70" font-family="Arial, sans-serif" font-size="29" font-weight="700">SDK hooks &amp; backend events</text>
+<text x="140" y="1716.75" fill="#5a6a80" font-family="Arial, sans-serif" font-size="25" font-weight="400">Call IDs · status · latency · usage / cost</text>
+<polyline points="850,1688 1000,1688" fill="none" stroke="#536e98" stroke-width="4" stroke-linejoin="round"/>
+<polygon points="1000,1688 987.7138441335347,1694.7119575404588 987.7138441335347,1681.2880424595412" fill="#536e98"/>
+<text x="1050" y="1672.91" fill="#354b70" font-family="Arial, sans-serif" font-size="29" font-weight="700">SQL audit storage</text>
+<text x="1050" y="1716.75" fill="#5a6a80" font-family="Arial, sans-serif" font-size="25" font-weight="400">Agent INSERT only · visible persistence failures</text>
+<text x="100" y="1808.17" fill="#5a6a80" font-family="Arial, sans-serif" font-size="23" font-weight="700">03   OFFLINE SOP INGESTION</text>
+<rect x="100" y="1835" width="2200" height="90" rx="22" fill="#ffffff" stroke="#d4dce7" stroke-width="2"/>
+<text x="135" y="1889.91" fill="#62428c" font-family="Arial, sans-serif" font-size="29" font-weight="700">SOP files  →  Heading-aware chunks (600 / 60 overlap)  →  BGE-M3  →  Pinecone</text>
+<text x="100" y="1968.17" fill="#5a6a80" font-family="Arial, sans-serif" font-size="23" font-weight="400">Scope: one agent · in-process MCP · simulated actions · no external notifications</text>
+</svg>
