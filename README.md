@@ -2,7 +2,7 @@
 
 A cold-chain logistics assistant built with Claude Agent SDK and in-process MCP tools. It combines historical synthetic fleet telemetry, current weather, and retrieved standard operating procedures (SOPs) to support incident assessment.
 
-**Status — October 28, 2026:** Running locally in Docker with an authenticated Streamlit website at `http://127.0.0.1:8501`. Cloud deployment is deferred at the owner's request; no public demo URL exists. Portfolio documentation is included below; a demo recording is out of scope.
+**Status — October 28, 2026:** Running locally in Docker with an authenticated Streamlit website at `http://127.0.0.1:8501`. Cloud deployment is deferred at the owner's request; no public demo URL exists. Architecture, setup, guardrails, and measured evaluation results are documented below.
 
 The agent uses Claude Agent SDK with an in-process MCP server exposing three evidence tools for telemetry, weather, and SOP retrieval, plus a fourth tool that stores a simulated escalation proposal for human review. Both the CLI and Streamlit frontend use a shared prompt and event interface. Imports make no model or network calls.
 
@@ -86,7 +86,7 @@ The website binds to loopback port 8501 and SQL Server to loopback port 1434. Do
 docker compose -f compose.yaml -f compose.demo.yaml stop web sqlserver
 ```
 
-Avoid `down --volumes`, which deletes persistent data. For first-time Docker setup, embedding preparation, readiness, pause/resume, and deployment details, see [the deployment guide](docs/PART7.md). Native development setup follows below.
+Avoid `down --volumes`, which deletes persistent data. For first-time Docker setup, embedding preparation, readiness, pause/resume, and deployment details, see [the setup guide](docs/SETUP.md). Native development setup follows below.
 
 ## Install and configure
 
@@ -175,7 +175,7 @@ streamlit run src/ui.py
 
 The CLI supports `/reset`, `/approvals`, and `/quit`. The UI supports New conversation. SDK session files stay under the ignored `data/cache/agent-runtime/` directory. No most-recent-global-session resume is used. Both entry points load the same system prompt. Restart the running app after changing `.env`; settings and service instances are cached per process. Backend tracing records request and tool lifecycles independently of the UI. SQL audit failures produce visible warnings. Approval decisions require their separate SQLite ledger to commit atomically.
 
-For offline integration checks, run the unit tests. `python -m scripts.verify_sdk_runtime` checks bundled-runtime startup without a model request. The separate `python -m scripts.verify_agent --live` command makes paid Claude calls and sends retrieved evidence to Anthropic; use it only after authorizing that transfer. See `docs/PART3.md` and the Part 3 verification report for the exact verification status.
+For offline integration checks, run the unit tests. `python -m scripts.verify_sdk_runtime` checks bundled-runtime startup without a model request. The separate `python -m scripts.verify_agent --live` command makes paid Claude calls and sends retrieved evidence to Anthropic; use it only after authorizing that transfer. See [verification evidence](docs/verification/README.md) for recorded checks and their scope.
 
 ## Guardrails
 
@@ -183,17 +183,15 @@ SQL is parsed into an allowlisted T-SQL AST and regenerated before execution. On
 
 Tools have bounded caller deadlines, shared request-call budgets, bounded worker capacity, output-size limits, and bounded transient retries (one attempt by default). Timed-out non-SQL threads retain their slots until finished; this prevents an unbounded queue but does not forcibly kill native embedding work. Configured credentials are redacted from tool/event/audit output, including streamed text.
 
-Use `python -m scripts.verify_guardrails --live` for the dedicated database timeout/cancellation check. See `docs/PART4.md` for supported SQL, defaults, and precise limits.
+Use `python -m scripts.verify_guardrails --live` for the dedicated database timeout/cancellation check. Defaults and execution limits are summarized below and configured in `src/config.py`.
 
 Local embedding weights must be prepared before starting the agent. If not already cached, explicitly run `hf download BAAI/bge-m3 --cache-dir data/cache/embeddings` during setup; inference requests will not download them.
 
-## Remaining phases and limitations
+## Limitations
 
-Approval is local and simulated. The current demo already has separate viewer/operator credentials; fresh setups must configure them before use. See [approval controls](docs/PART5.md). The evaluation harness and local Docker workflow are verified. External deployment is deferred; no public URL or production hosting claim is made. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
+Approval is local and simulated. The current demo already has separate viewer/operator credentials; fresh setups must configure them before use. Pending proposals require a separately authenticated operator; see [local setup](docs/SETUP.md). The evaluation harness and local Docker workflow are verified. External deployment is deferred; no public URL or production hosting claim is made. This implementation is not a general-purpose SQL sandbox or a hard CPU/memory isolation boundary.
 
 Fleet fixtures are fabricated historical data. Current weather cannot establish historical causation. This is a single-agent SDK implementation. No multi-agent system or public deployment is claimed. The small evaluation baseline measures specific checks, not general accuracy or human-reviewed faithfulness.
-
-See `docs/PART7.md`, `docs/PART6.md`, `docs/PART5.md`, `docs/PART4.md`, and `docs/PART3.md` for current behavior; `docs/PART2.md` and `docs/BASELINE.md` record earlier phases. `docs/VERIFICATION.md` records the historical Part 1 checks.
 
 ### Limits and remaining work
 
@@ -204,8 +202,6 @@ See `docs/PART7.md`, `docs/PART6.md`, `docs/PART5.md`, `docs/PART4.md`, and `doc
 - Telemetry has only four fabricated historical rows. Weather disruption is a demonstration heuristic, not a trained risk prediction or causal explanation. No real external notifications or operational incident execution are implemented.
 - Human answer review, inherited SOP/code publication rights, external hosting, and a stable public URL remain outstanding. The Docker web image was verified locally on ARM64; native AMD64 deployment still needs verification. SQL Server Developer edition is for development/demo use, not a claimed production license.
 
-Cloud discovery subsequently confirmed an existing Enterprise Knowledge Copilot Lightsail instance in the same AWS account. Lightsail reads worked despite the earlier EC2 policy denial, but its 2 GB host is undersized for this combined workload. No existing project was modified and no cold-chain cloud resources were created. The owner chose local execution for now; the earlier AWS blocker reports are historical evidence, not a claim that every AWS service is inaccessible.
-
 ## Evaluations
 
 ```bash
@@ -213,7 +209,7 @@ Cloud discovery subsequently confirmed an existing Enterprise Knowledge Copilot 
 .venv/bin/python -m scripts.evaluate --live-agent --live-retrieval --live-sql
 ```
 
-Live agent mode makes 12 paid Claude requests with fixed synthetic/SOP evidence, fresh sessions, and $0.15 SDK budgets per case by default. Retrieval mode reads the existing authorized Pinecone index. SQL mode runs native checks against the isolated SQL instance. Outputs go to new timestamped directories and preserve case failures, answers, tool evidence, latency/cost, and version hashes. See `docs/PART6.md` before interpreting scores. The latest saved run is [part7-runtime-v1](docs/evals/part7-runtime-v1/report.json), dated October 28, 2026. Its results are summarized below.
+Live agent mode makes 12 paid Claude requests with fixed synthetic/SOP evidence, fresh sessions, and $0.15 SDK budgets per case by default. Retrieval mode reads the existing authorized Pinecone index. SQL mode runs native checks against the isolated SQL instance. Outputs go to new timestamped directories and preserve case failures, answers, tool evidence, latency/cost, and version hashes. See [evaluation methodology](docs/EVALUATION.md) before interpreting scores. The latest saved run is [part7-runtime-v1](docs/evals/part7-runtime-v1/report.json), dated October 28, 2026. Its results are summarized below.
 
 
 ### Measured results and interpretation
@@ -227,38 +223,10 @@ Live agent mode makes 12 paid Claude requests with fixed synthetic/SOP evidence,
 | Agent latency | p50 6.05 s; p95 14.21 s | Nearest-rank percentiles across 12 fresh fixed-evidence agent cases |
 | Agent cost | $0.1121229 total | SDK-reported cost across those 12 cases; excludes other runs and service charges |
 | Native SQL supplement | Passed | Real isolated SQL permissions and timeout/cancellation; separate from the 30-case denominator |
-| Automated test suite | 92 tests passed at Part 7 verification | Separate unit/integration suite; [recorded verification](docs/PART7_STATUS.md) |
+| Automated test suite | 92 tests passed at recorded local verification | Separate unit/integration suite; [recorded verification](docs/verification/README.md) |
 
 Agent evaluation uses fixed synthetic telemetry/weather and controlled SOP passages; the telemetry fixture uses the production parser/executor on SQLite rather than SQL Server. Actual Pinecone retrieval is measured separately in four cases. The native SQL supplement covers real SQL Server behavior. These results are not a 30-question real-fleet benchmark, a held-out generalization score, a human-reviewed faithfulness measurement, or a production latency SLA.
 
-The first baseline exposed an evaluator false positive: “No incident was created” matched a positive-execution pattern. Scorer version 1.0.1 corrected it while retaining the original results. Qualitative inspection also found unsupported speculation about an empty telemetry result and a mismatch between requested and normalized SQL row limits; the prompt/output handling changed and the full Part 7 evaluation was rerun. Actual human review remains pending. See [evaluation methodology](docs/PART6.md) and the report's `release_gate` and provenance fields.
+The first baseline exposed an evaluator false positive: “No incident was created” matched a positive-execution pattern. Scorer version 1.0.1 corrected it while retaining the original results. Qualitative inspection also found unsupported speculation about an empty telemetry result and a mismatch between requested and normalized SQL row limits; the prompt/output handling changed and the full evaluation was rerun. Actual human review remains pending. See [evaluation methodology](docs/EVALUATION.md) and the report's `release_gate` and provenance fields.
 
-The [fresh-browser verification](docs/part7-browser-check.json) separately checked login, evidence panels, telemetry/weather/SOP tool use, and authenticated approval creating one simulated incident. This was automated browser QA, not independent human answer review. Resumed-session browser cost fields may be cumulative and must not be summed. The report records source hashes and a dirty working tree at evaluation time; the Git commit alone does not identify all evaluated changes.
-
-## Implementation history
-
-This project has its own application package, configuration, version history, SQL database, and Pinecone index. Its core components are the Claude Agent SDK loop, four MCP tools, dense SOP retrieval, database and tool execution controls, backend tracing, authenticated simulated approval, repeatable evaluations, and the local Docker website.
-
-The implementation commits below are dated **October 28, 2026** and document the recorded development sequence.
-
-| Stage | Recorded work | Evidence |
-|---|---|---|
-| Parts 1–2 | Project packaging, synthetic data, service boundaries, isolated SQL/Pinecone resources | `084bb47`, `0eb87cd`; [baseline](docs/BASELINE.md), [Part 2](docs/PART2_COMPLETION.md) |
-| Part 3 | Shared Claude SDK loop, MCP tools, CLI/UI, authorized live workflow | `2c055a4`, `6e8fed8`; [Part 3](docs/PART3.md) |
-| Part 4 | SQL AST validation, permissions, cancellation, bounded tools and redaction | `a082d01`; [Part 4](docs/PART4_COMPLETION.md) |
-| Part 5 | Backend tracing and authenticated simulated incident approval | `0e06e52`; [Part 5](docs/PART5_COMPLETION.md) |
-| Part 6 | Versioned evaluations, preserved scorer correction, results and limitations | `0f039a5`, `eddd145`; [Part 6](docs/PART6_COMPLETION.md) |
-| Part 7 | Authenticated website, container readiness, refreshed evaluation and browser QA | `636d79b`; [guide](docs/PART7.md), [browser evidence](docs/part7-browser-check.json) |
-| Part 8 | README architecture, results, setup, limitations, and resume wording | Documentation update; recording omitted at the owner's request |
-
-The project uses synthetic telemetry fixtures. Cloud deployment and a public demo URL remain deferred.
-
-## Resume wording for the current local project
-
-**Cold-Chain Logistics Assistant — Claude Agent SDK, MCP, RAG, SQL Server, Docker**
-
-- Built a cold-chain logistics assistant with Claude Agent SDK and four MCP tools for fleet telemetry, weather, BGE-M3/Pinecone SOP retrieval, and human-reviewed simulated escalation.
-- Added SQL AST validation, restricted database permissions, query cancellation, backend audit tracing, and authenticated human approval with duplicate-execution prevention.
-- Built a versioned 30-case evaluation suite; all defined checks passed in the recorded run, including 12/12 tool-selection checks and 4/4 SOP source-and-section retrieval hits at top-2; verified the application with 92 automated tests.
-
-Use “runs locally in Docker” when discussing delivery status. Add “deployed” and a website link only after actual external deployment and verification. Do not claim general accuracy, operational business impact, a human-reviewed faithfulness score, or an unverified duration.
+The [fresh-browser verification](docs/verification/browser.json) separately checked login, evidence panels, telemetry/weather/SOP tool use, and authenticated approval creating one simulated incident. This was automated browser QA, not independent human answer review. Resumed-session browser cost fields may be cumulative and must not be summed. The report records source hashes and a dirty working tree at evaluation time; the Git commit alone does not identify all evaluated changes.

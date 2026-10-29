@@ -1,6 +1,6 @@
-# Part 7 — local website verified; AWS deployment pending
+# Local setup and operation
 
-October 28, 2026. AWS is the selected provider. No AWS resources have been created and no public demo URL is available yet.
+The application runs locally in Docker. External deployment is deferred.
 
 ## Verified implementation
 
@@ -12,14 +12,13 @@ These are single-instance demo controls, not multi-tenant SSO or a provider-enfo
 
 The model runtime receives blank overrides for other configured secret environment variables; business tools retain their configuration in the parent process. The Docker web service receives no SQL admin password. A one-off `bootstrap` service gets administrative credentials only for SQL setup.
 
-The empty-result prompt now prohibits unsupported explanations and requires quoting the tool's `normalized_sql`. The updated 30-case evaluation run passes its defined checks; human review remains pending. See `docs/evals/part7-runtime-v1/`.
+The empty-result prompt now prohibits unsupported explanations and requires quoting the tool's `normalized_sql`. The recorded 30-case evaluation run passes its defined checks; human review remains pending. See `docs/evals/part7-runtime-v1/`.
 
 ## Local commands
 
-The local containers are currently stopped. To start this project's existing SQL instance and the authenticated website:
+To start the configured local SQL instance and authenticated website, run from the repository root:
 
 ```bash
-cd '/Users/pallavjain/my-git/AI Engineer/cold-chain-claude-mcp'
 docker compose -f compose.yaml -f compose.demo.yaml up -d sqlserver web
 ```
 
@@ -59,16 +58,3 @@ docker compose stop sqlserver
 
 Avoid `down --volumes`: it deletes persistent simulation, admission, runtime, and SQL data. Back up durable volumes before migrations or cleanup. No automatic retention/backup service has been configured.
 
-## AWS plan and current blocker
-
-Candidate architecture: a single x86-64 Linux EC2 host in `us-east-1`, with Docker Compose, persistent encrypted EBS, private SQL networking, and HTTPS reverse proxy. The existing Pinecone index and Anthropic API remain external services. Use Session Manager administration and no inbound SSH/database ports. The prepared `compose.public.yaml` and `deploy/Caddyfile` require an owned DNS hostname and have not been applied. No anonymous public access has been enabled.
-
-The Linux web container was tested on local aarch64 Docker; the existing SQL image runs through amd64 emulation locally. For AWS SQL Server support, use a native Intel/AMD x86-64 host. The target amd64 deployment still needs validation on the selected AWS host. Deep readiness observed about 2.21 GB peak RSS in the check process; this is not a full-host memory benchmark. An 8 GiB instance is a candidate for the bounded sample workload, with sizing confirmed by deployment testing.
-
-The AWS connection can authenticate. Rechecks of `ec2:DescribeInstanceTypes`, `ec2:DescribeVpcs`, and `ssm:GetParameter` in `us-east-1` are explicitly denied by an AWS Organizations service control policy. A role named `AccountFullAccessRole` does not remove the observed organization-policy restriction. No attempt was made to bypass it or create paid resources. The organization administrator must permit the intended deployment operations, or the connection must point to the intended account with suitable access.
-
-AWS Pricing returned an on-demand Linux `t3a.large` rate of $0.0752/hour in `us-east-1` on October 28, 2026: approximately $54.90 for 730 running hours, **compute only**. This is a planning estimate, not an approved spend or a total deployment quote. Storage, public IPv4, domain/DNS, transfer, monitoring, API/Pinecone usage, and tax are additional. Availability, AMI, VPC, and full costs must be verified once the policy blocker is resolved. Use standard burst-credit mode if selecting a T3a instance to avoid surplus-credit billing; sustained CPU load may then throttle.
-
-Before a public resume URL: obtain suitable AWS access, agree on cost/runtime and an owned domain, review inherited SOP publication rights or replace it with authorized demo content, finish the actual human answer review, validate native amd64 deployment and TLS/access controls, then approve the concrete resource/data-transfer plan. Part 7 is incomplete until the hosted workflow and URL are verified. Part 8 has not started.
-
-References: [Streamlit Docker deployment](https://docs.streamlit.io/deploy/tutorials/docker), [Streamlit configuration](https://docs.streamlit.io/develop/api-reference/configuration/config.toml), [SQL Server container support](https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-docker?view=sql-server-ver16), [Claude agent hosting](https://platform.claude.com/cookbook/claude-agent-sdk-07-hosting-the-agent).

@@ -1,6 +1,6 @@
-# Part 6 — repeatable evaluations
+# Evaluation methodology
 
-Implemented October 28, 2026. The harness separates controls, agent behavior with fixed evidence, and actual vector retrieval. All scores include their denominators and scope. This phase adds no public deployment.
+The harness separates controls, agent behavior with fixed evidence, and actual vector retrieval. All scores include their denominators and scope.
 
 ## Commands
 
@@ -57,4 +57,4 @@ The initial live report is retained in `docs/evals/live-baseline-v1/`. It has on
 
 Regression criteria were established after inspecting this baseline: all 14 control, 12 agent, and four retrieval cases must execute and pass; critical named checks must pass; the native SQL supplement must pass. Missing coverage fails the automatic gate. These thresholds define regressions on this small set, not production release approval. The publication gate remains `human_review_required` and does not auto-certify manual review from an edited file.
 
-The current completion report points to the final rescored report. Review an actual human's completed `human-review.json` before using broad answer-quality claims. Do not edit the old report or remove failed cases to improve a score. A changed prompt, model, dataset, or tool implementation calls for a new generation run; rescoring alone is only for scorer corrections on the same evidence.
+The latest saved runtime results are in `docs/evals/part7-runtime-v1/report.json`. Review an actual human's completed `human-review.json` before using broad answer-quality claims. Do not edit the old report or remove failed cases to improve a score. A changed prompt, model, dataset, or tool implementation calls for a new generation run; rescoring alone is only for scorer corrections on the same evidence.
